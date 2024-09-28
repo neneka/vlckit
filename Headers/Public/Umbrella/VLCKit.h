@@ -68,6 +68,7 @@
 @class VLCTime;
 @class VLCAudio;
 @class VLCMediaThumbnailer;
+@class VLCMediaParser;
 @class VLCMediaListPlayer;
 @class VLCMediaPlayer;
 @class VLCAudioEqualizer;

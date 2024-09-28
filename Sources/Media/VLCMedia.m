@@ -26,12 +26,14 @@
  *****************************************************************************/
 
 #import <VLCMedia.h>
+#import <VLCMedia+Internal.h>
 #import <VLCMediaList.h>
 #import <VLCLibrary.h>
 #import <VLCLibVLCBridging.h>
 #import <VLCTime.h>
 #import <VLCMediaMetaData.h>
 #import <VLCEventsHandler.h>
+#import <VLCMediaParser.h>
 #import <vlc/libvlc.h>
 #import <sys/sysctl.h> // for sysctlbyname
 
@@ -93,11 +95,12 @@ void close_cb(void *opaque) {
  */
 @interface VLCMedia()
 {
-    void *                  p_md;                   ///< Internal media descriptor instance
-    NSInputStream           *stream;                ///< Stream object if instance is initialized via NSInputStream to pass to callbacks
-    _Nullable id            _userData;              /// libvlc_media_user_data
-    VLCEventsHandler*       _eventsHandler;          /// handles libvlc callbacks
+    void *p_md;                            ///< Internal media descriptor instance
+    NSInputStream *stream;                 ///< Stream object if instance is initialized via NSInputStream to pass to callbacks
+    _Nullable id _userData;                /// libvlc_media_user_data
+    VLCEventsHandler *_eventsHandler;      /// handles libvlc callbacks
     VLCMediaMetaData *_metaData;
+    VLCMediaParsedStatus _parsedStatus;    ///< cached parse status, updated when parsing finishes
 }
 
 /* Make our properties internally readwrite */
@@ -106,7 +109,6 @@ void close_cb(void *opaque) {
 - (void)parseIfNeeded;
 
 /* Callback Methods */
-- (void)parsedChanged;
 - (void)metaChanged:(const libvlc_meta_t)metaType;
 - (void)subItemAdded;
 
@@ -150,17 +152,6 @@ static void HandleMediaSubItemAdded(const libvlc_event_t * event, void * opaque)
     }
 }
 
-static void HandleMediaParsedChanged(const libvlc_event_t * event, void * opaque)
-{
-    @autoreleasepool {
-        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler*)opaque;
-        [eventsHandler handleEvent:^(id _Nonnull object) {
-            VLCMedia *media = (VLCMedia *)object;
-            [media parsedChanged];
-        }];
-    }
-}
-
 static const struct event_handler_entry {
     libvlc_event_type_t type;
     libvlc_callback_t callback;
@@ -169,7 +160,6 @@ static const struct event_handler_entry {
     { libvlc_MediaMetaChanged,          HandleMediaMetaChanged },
     { libvlc_MediaDurationChanged,      HandleMediaDurationChanged },
     { libvlc_MediaSubItemAdded,         HandleMediaSubItemAdded },
-    { libvlc_MediaParsedChanged,        HandleMediaParsedChanged },
 };
 
 /******************************************************************************
@@ -352,44 +342,25 @@ static const struct event_handler_entry {
 
 - (VLCMediaParsedStatus)parsedStatus
 {
-    libvlc_media_parsed_status_t status = libvlc_media_get_parsed_status(p_md);
-    return (VLCMediaParsedStatus)status;
+    return _parsedStatus;
 }
 
 - (int)parseWithOptions:(VLCMediaParsingOptions)options
                 timeout:(int)timeoutValue
                 library:(VLCLibrary*)library
 {
-    // we are using the default time-out value
-    return libvlc_media_parse_request([library instance],
-                                      p_md,
-                                      options,
-                                      timeoutValue);
+    VLCMediaParser *parser = [[VLCMediaParser alloc] initWithLibrary:library];
+    return [parser queueMedia:self withDescriptor:p_md options:options timeout:timeoutValue];
 }
 
 - (int)parseWithOptions:(VLCMediaParsingOptions)options timeout:(int)timeoutValue
 {
-    // we are using the default time-out value
-    return [self parseWithOptions:options
-                          timeout:timeoutValue
-                          library:[VLCLibrary sharedLibrary]];
+    return [[VLCMediaParser sharedParser] queueMedia:self withDescriptor:p_md options:options timeout:timeoutValue];
 }
 
 - (int)parseWithOptions:(VLCMediaParsingOptions)options
 {
-    return [self parseWithOptions:options
-                           timeout:-1
-                          library:[VLCLibrary sharedLibrary]];
-}
-
-- (void)parseStop:(VLCLibrary*)library
-{
-    libvlc_media_parse_stop([library instance], p_md);
-}
-
-- (void)parseStop
-{
-    libvlc_media_parse_stop([[VLCLibrary sharedLibrary] instance], p_md);
+    return [[VLCMediaParser sharedParser] queueMedia:self withDescriptor:p_md options:options timeout:-1];
 }
 
 - (void)addOption:(NSString *)option
@@ -564,12 +535,12 @@ static const struct event_handler_entry {
     libvlc_media_list_release( p_mlist );
 }
 
-- (void)parsedChanged
+- (void)parsingFinishedWithStatus:(VLCMediaParsedStatus)status
 {
     [self willChangeValueForKey:@"parsedStatus"];
-    [self parsedStatus];
+    _parsedStatus = status;
     [self didChangeValueForKey:@"parsedStatus"];
-    
+
     if ([_delegate respondsToSelector:@selector(mediaDidFinishParsing:)])
         [_delegate mediaDidFinishParsing:self];
 }
