@@ -187,7 +187,7 @@ static void display(void *opaque, void *picture)
     NSAssert(_data, @"Can't create data");
 
     NSAssert(!_mp, @"We are already fetching a thumbnail");
-    _mp = libvlc_media_player_new(_library.instance);
+    _mp = libvlc_media_player_new(_library.instance, NULL, NULL);
     if (_mp == NULL) {
         NSAssert(0, @"%s: creating the player instance failed", __PRETTY_FUNCTION__);
         [self endThumbnailing];
