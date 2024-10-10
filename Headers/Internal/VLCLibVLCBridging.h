@@ -91,7 +91,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Returns the receiver's internal media descriptor pointer.
  * \return The receiver's internal media descriptor pointer.
  */
-@property (readonly) void * libVLCMediaDescriptor;
+@property (readonly) libvlc_media_t * libVLCMediaDescriptor;
 @end
 
 /**

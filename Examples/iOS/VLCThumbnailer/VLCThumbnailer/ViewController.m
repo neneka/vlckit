@@ -26,7 +26,7 @@
 #import "ViewController.h"
 #import <VLCKit/VLCKit.h>
 
-@interface ViewController () <VLCMediaPlayerDelegate, VLCMediaThumbnailerDelegate, VLCMediaDelegate>
+@interface ViewController () <VLCMediaThumbnailerDelegate, VLCMediaDelegate>
 {
     UIImageView *_imageView;
     UIActivityIndicatorView *_activityIndicatorView;
@@ -60,9 +60,14 @@
     [sharedLibrary setLoggers:@[consoleLogger]];
     VLCMedia *media = [VLCMedia mediaWithURL:[NSURL URLWithString:@"http://streams.videolan.org/streams/mp4/Mr_MrsSmith-h264_aac.mp4"]];
     media.delegate = self;
-    VLCMediaThumbnailer *thumbnailer = [VLCMediaThumbnailer thumbnailerWithMedia:media delegate:self andVLCLibrary:[VLCLibrary sharedLibrary]];
-    [thumbnailer fetchThumbnail];
+    [[VLCMediaParser sharedParser] queueMedia:media options:VLCMediaParseLocal|VLCMediaFetchLocal|VLCMediaParseNetwork|VLCMediaFetchNetwork];
     [super viewDidAppear:animated];
+}
+
+- (void)mediaDidFinishParsing:(VLCMedia *)aMedia
+{
+    VLCMediaThumbnailer *thumbnailer = [VLCMediaThumbnailer thumbnailerWithMedia:aMedia delegate:self andVLCLibrary:[VLCLibrary sharedLibrary]];
+    [thumbnailer fetchThumbnail];
 }
 
 - (void)mediaThumbnailerDidTimeOut:(VLCMediaThumbnailer *)mediaThumbnailer

@@ -105,7 +105,7 @@
 		7DEBDB0D203C5727000A7D2F /* libvlc_renderer_discoverer.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE4203C56D5000A7D2F /* libvlc_renderer_discoverer.h */; };
 		7DEBDB0F203C5727000A7D2F /* libvlc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE6203C56D5000A7D2F /* libvlc.h */; };
 		7DEBDB10203C5727000A7D2F /* vlc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE7203C56D5000A7D2F /* vlc.h */; };
-		7DED47F42CA83E3300B9358A /* VLCMediaParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DED47F22CA83E3300B9358A /* VLCMediaParser.h */; };
+		7DED47F42CA83E3300B9358A /* VLCMediaParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DED47F22CA83E3300B9358A /* VLCMediaParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7DED47F52CA83E3300B9358A /* VLCMediaParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DED47F32CA83E3300B9358A /* VLCMediaParser.m */; };
 		7DF2DFB72BABF82A00835369 /* VLCVideoCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D988CFD24C7304800279703 /* VLCVideoCommon.h */; platformFilters = (macos, ); settings = {ATTRIBUTES = (Public, ); }; };
 		7DF2DFB82BABF82E00835369 /* VLCVideoLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D988CF724C72FCE00279703 /* VLCVideoLayer.h */; platformFilters = (macos, ); settings = {ATTRIBUTES = (Public, ); }; };
@@ -644,7 +644,6 @@
 			isa = PBXGroup;
 			children = (
 				7A5ECAC611DE8F7300F66AF3 /* VLCMedia.m */,
-				7DED47F32CA83E3300B9358A /* VLCMediaParser.m */,
 				7A5ECAC711DE8F7300F66AF3 /* VLCMediaList.m */,
 				3C4A7E1D281C53AF00577290 /* VLCMediaMetaData.m */,
 			);
@@ -675,6 +674,7 @@
 			children = (
 				636E975711EBC67A002FE8A9 /* VLCMediaThumbnailer.m */,
 				6360B0E111E7F0C000EAD790 /* VLCMediaDiscoverer.m */,
+				7DED47F32CA83E3300B9358A /* VLCMediaParser.m */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -740,7 +740,6 @@
 				7DED47F62CA8477A00B9358A /* VLCMedia+Internal.h */,
 				6C953201297EDC7500F41EC8 /* VLCEventsHandler.h */,
 				7DFB521A28D0ABA50020DCDE /* VLCFilter+Internal.h */,
-				7DED47F22CA83E3300B9358A /* VLCMediaParser.h */,
 				7D66193624D1F5DC00781E5D /* Prefix.pch */,
 			);
 			path = Internal;
@@ -823,6 +822,7 @@
 			children = (
 				636E979011EBC96D002FE8A9 /* VLCMediaThumbnailer.h */,
 				6360B0E311E7F0D300EAD790 /* VLCMediaDiscoverer.h */,
+				7DED47F22CA83E3300B9358A /* VLCMediaParser.h */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -1021,10 +1021,10 @@
 				7DE26F362BA72D98000CC89C /* vlc-plugins-iphone-simulator.h in Headers */,
 				7DE26F382BA72D98000CC89C /* vlc-plugins-appletv-simulator-x86_64.h in Headers */,
 				7DE26F3A2BA72DB2000CC89C /* VLCStreamOutput.h in Headers */,
+				7DED47F42CA83E3300B9358A /* VLCMediaParser.h in Headers */,
 				7DE26F392BA72DA9000CC89C /* VLCTranscoder.h in Headers */,
 				7DF2DFB72BABF82A00835369 /* VLCVideoCommon.h in Headers */,
 				7DDC02121B501ECF0078FC84 /* VLCTime.h in Headers */,
-				7DED47F42CA83E3300B9358A /* VLCMediaParser.h in Headers */,
 				3CD18254298D8C9900E466A3 /* VLCAudioEqualizer.h in Headers */,
 				6C21838428509122000C4AC9 /* VLCLogMessageFormatter.h in Headers */,
 				6C21838728509122000C4AC9 /* VLCLogging.h in Headers */,

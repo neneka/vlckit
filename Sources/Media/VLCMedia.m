@@ -32,7 +32,6 @@
 #import <VLCLibVLCBridging.h>
 #import <VLCTime.h>
 #import <VLCMediaMetaData.h>
-#import <VLCMediaParser.h>
 #import <vlc/libvlc.h>
 #import <sys/sysctl.h> // for sysctlbyname
 
@@ -94,7 +93,7 @@ void close_cb(void *opaque) {
  */
 @interface VLCMedia()
 {
-    void *p_md;                            ///< Internal media descriptor instance
+    libvlc_media_t *p_md;                            ///< Internal media descriptor instance
     NSInputStream *stream;                 ///< Stream object if instance is initialized via NSInputStream to pass to callbacks
     _Nullable id _userData;                /// libvlc_media_user_data
     VLCMediaMetaData *_metaData;
@@ -104,7 +103,6 @@ void close_cb(void *opaque) {
 /* Make our properties internally readwrite */
 @property (nonatomic, readwrite, strong, nullable) VLCMediaList * subitems;
 
-- (void)parseIfNeeded;
 @end
 
 /******************************************************************************
@@ -250,24 +248,8 @@ void close_cb(void *opaque) {
 
 - (VLCTime *)lengthWaitUntilDate:(NSDate *)aDate
 {
-    static const long long thread_sleep = 10000;
-
     if (!_length) {
-        // Force parsing of this item.
-        [self parseIfNeeded];
-
-        // wait until we are preparsed
-       libvlc_media_parsed_status_t status = libvlc_media_get_parsed_status(p_md);
-       while (!_length && !(status == VLCMediaParsedStatusFailed || status == VLCMediaParsedStatusDone) && [aDate timeIntervalSinceNow] > 0) {
-          usleep( thread_sleep );
-          status = libvlc_media_get_parsed_status(p_md);
-       }
-
-        // So we're done waiting, but sometimes we trap the fact that the parsing
-        // was done before the length gets assigned, so lets go ahead and assign
-        // it ourselves.
-        if (!_length)
-            return [self length];
+        return [self length];
     }
 
     return _length;
@@ -278,22 +260,14 @@ void close_cb(void *opaque) {
     return _parsedStatus;
 }
 
-- (int)parseWithOptions:(VLCMediaParsingOptions)options
-                timeout:(int)timeoutValue
-                library:(VLCLibrary*)library
+- (void)parsingFinishedWithStatus:(VLCMediaParsedStatus)status
 {
-    VLCMediaParser *parser = [[VLCMediaParser alloc] initWithLibrary:library];
-    return [parser queueMedia:self withDescriptor:p_md options:options timeout:timeoutValue];
-}
+    [self willChangeValueForKey:@"parsedStatus"];
+    _parsedStatus = status;
+    [self didChangeValueForKey:@"parsedStatus"];
 
-- (int)parseWithOptions:(VLCMediaParsingOptions)options timeout:(int)timeoutValue
-{
-    return [[VLCMediaParser sharedParser] queueMedia:self withDescriptor:p_md options:options timeout:timeoutValue];
-}
-
-- (int)parseWithOptions:(VLCMediaParsingOptions)options
-{
-    return [[VLCMediaParser sharedParser] queueMedia:self withDescriptor:p_md options:options timeout:-1];
+    if ([_delegate respondsToSelector:@selector(mediaDidFinishParsing:)])
+        [_delegate mediaDidFinishParsing:self];
 }
 
 - (void)addOption:(NSString *)option
@@ -428,23 +402,6 @@ void close_cb(void *opaque) {
     }
 }
 
-- (void)parseIfNeeded
-{
-    VLCMediaParsedStatus parsedStatus = [self parsedStatus];
-    if (parsedStatus == VLCMediaParsedStatusSkipped || parsedStatus == VLCMediaParsedStatusInit)
-        [self parseWithOptions:VLCMediaParseLocal | VLCMediaFetchLocal];
-}
-
-- (void)parsingFinishedWithStatus:(VLCMediaParsedStatus)status
-{
-    [self willChangeValueForKey:@"parsedStatus"];
-    _parsedStatus = status;
-    [self didChangeValueForKey:@"parsedStatus"];
-
-    if ([_delegate respondsToSelector:@selector(mediaDidFinishParsing:)])
-        [_delegate mediaDidFinishParsing:self];
-}
-
 @end
 
 /******************************************************************************
@@ -483,7 +440,7 @@ void close_cb(void *opaque) {
     return self;
 }
 
-- (void *)libVLCMediaDescriptor
+- (libvlc_media_t *)libVLCMediaDescriptor
 {
     return p_md;
 }

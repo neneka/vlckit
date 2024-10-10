@@ -27,12 +27,12 @@
 #import <VLCKit/VLCKit.h>
 #import <CommonCrypto/CommonDigest.h> // for MD5
 
-@interface ViewController () <VLCMediaPlayerDelegate, VLCMediaDelegate>
+@interface ViewController () <VLCMediaParserDelegate>
 {
     UITextView *_textView;
     UIActivityIndicatorView *_activityIndicatorView;
-    NSTimer *_timeOutTimer;
     VLCMedia *_media;
+    VLCMediaParser *_parser;
 }
 @end
 
@@ -57,34 +57,25 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
+    [super viewDidAppear:animated];
+
     [_activityIndicatorView startAnimating];
     VLCLibrary *sharedLibrary = [VLCLibrary sharedLibrary];
     VLCConsoleLogger *consoleLogger = [[VLCConsoleLogger alloc] init];
     consoleLogger.level = kVLCLogLevelDebug;
     [sharedLibrary setLoggers:@[consoleLogger]];
     _media = [VLCMedia mediaWithURL:[NSURL URLWithString:@"http://streams.videolan.org/streams/mp4/Mr_MrsSmith-h264_aac.mp4"]];
-    _media.delegate = self;
 
-    _timeOutTimer = [NSTimer scheduledTimerWithTimeInterval:30. target:self selector:@selector(parsingTimeout:) userInfo:nil repeats:NO];
+    _parser = [VLCMediaParser sharedParser];
+    _parser.delegate = self;
 
-    [_media parseWithOptions:VLCMediaParseLocal|VLCMediaFetchLocal|VLCMediaParseNetwork|VLCMediaFetchNetwork];
-
-    [super viewDidAppear:animated];
+    [_parser queueMedia:_media options:VLCMediaParseLocal|VLCMediaFetchLocal|VLCMediaParseNetwork|VLCMediaFetchNetwork];
 }
 
-- (void)parsingTimeout:(NSTimer *)timer
+- (void)mediaFinishedParsing:(VLCMedia *)media withStatus:(VLCMediaParsedStatus)status
 {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSMutableString *parsingOutput = [[NSMutableString alloc] initWithFormat:@"\n\nParsing of the following media reached its timeout: %@\n", _media];
-    _textView.text = parsingOutput;
-}
-
-- (void)mediaDidFinishParsing:(VLCMedia *)media
-{
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    [_timeOutTimer invalidate];
-
-    NSMutableString *parsingOutput = [[NSMutableString alloc] initWithFormat:@"\n\nParsed: %@\nNumber of tracks: %lu\n", _media, (unsigned long)[[_media tracksInformation] count]];
+    NSMutableString *parsingOutput = [[NSMutableString alloc] initWithFormat:@"\n\nParsed: %@ (Status: %i)\nNumber of tracks: %lu\n",
+                                      _media, status, (unsigned long)[[_media tracksInformation] count]];
 
     _media.delegate = nil;
 
@@ -131,7 +122,7 @@
     NSLog(@"%@", parsingOutput);
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        [_activityIndicatorView stopAnimating];
+        [self->_activityIndicatorView stopAnimating];
         self->_textView.text = parsingOutput;
     });
 }

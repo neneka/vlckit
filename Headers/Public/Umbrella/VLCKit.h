@@ -33,6 +33,7 @@
 #import <VLCKit/VLCAudioEqualizer.h>
 #import <VLCKit/VLCMediaListPlayer.h>
 #import <VLCKit/VLCMediaThumbnailer.h>
+#import <VLCKit/VLCMediaParser.h>
 #import <VLCKit/VLCMediaMetaData.h>
 #import <VLCKit/VLCTime.h>
 #import <VLCKit/VLCFilter.h>

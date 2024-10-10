@@ -61,8 +61,8 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaMetaChangedNotification NS_SW
  * Delegate method called whenever the media was parsed.
  * \param aMedia The media resource whose meta data has been changed.
  */
-
 - (void)mediaDidFinishParsing:(VLCMedia *)aMedia;
+
 @end
 
 /**
@@ -235,7 +235,7 @@ typedef NS_ENUM(NSUInteger, VLCMediaType) {
  */
 typedef NS_ENUM(unsigned, VLCMediaParsedStatus)
 {
-    VLCMediaParsedStatusInit = 0,
+    VLCMediaParsedStatusNone = 0,
     VLCMediaParsedStatusPending,
     VLCMediaParsedStatusSkipped,
     VLCMediaParsedStatusFailed,
@@ -243,6 +243,7 @@ typedef NS_ENUM(unsigned, VLCMediaParsedStatus)
     VLCMediaParsedStatusCancelled,
     VLCMediaParsedStatusDone
 };
+
 /**
  * \return Returns the parse status of the media
  */
@@ -300,73 +301,6 @@ typedef NS_ENUM(int, VLCMediaFileStatReturnType) {
  * \return VLCMediaFileStatReturnType
  */
 - (VLCMediaFileStatReturnType)fileStatValueForType:(const VLCMediaFileStatType)type value:(uint64_t *)value;
-
-/**
- * enum of available options for use with parseWithOptions
- * \note you may pipe multiple values for the single parameter
- */
-typedef NS_OPTIONS(int, VLCMediaParsingOptions) {
-    VLCMediaParseLocal          = 0x01,     ///< Parse media if it's a local file
-    VLCMediaParseNetwork        = 0x02,     ///< Parse media even if it's a network file
-    VLCMediaParseForced         = 0x04,     ///< Force parsing the media even if it would be skipped
-    VLCMediaFetchLocal          = 0x08,     ///< Fetch meta and cover art using local resources
-    VLCMediaFetchNetwork        = 0x10,     ///< Fetch meta and cover art using network resources
-    VLCMediaDoInteract          = 0x20,     ///< Interact with the user when preparsing this item (and not its sub items). Set this flag in order to receive a callback when the input is asking for credentials.
-};
-
-/**
- * Triggers an asynchronous parse of the media item using the given options.
- *
- * This will execute \p VLCMedia::parseWithOptions:timeout:library: with the
- * default VLCLibrary and the default timeout from this VLCLibrary.
- *
- * \param options the option mask based on VLCMediaParsingOptions
- * \return 0 on success, -1 in case of error
- *
- * \note Listen to the "parsed" key value or the mediaDidFinishParsing: delegate
- * method to be notified about parsing results. Those triggers will _NOT_ be
- * raised if parsing fails and this method returns an error.
- *
- * \see VLCMediaParsingOptions
- */
-- (int)parseWithOptions:(VLCMediaParsingOptions)options;
-
-/**
- * Triggers an asynchronous parse of the media item using the given options.
- *
- * This will execute \p VLCMedia::parseWithOptions:timeout:library: with the
- * default VLCLibrary.
- *
- * \param options the option mask based on VLCMediaParsingOptions
- * \param timeoutValue a time-out value in milliseconds (-1 for default, 0 for infinite)
- * \return 0 on success, -1 in case of error
- *
- * \note Listen to the "parsed" key value or the mediaDidFinishParsing: delegate
- * method to be notified about parsing results. Those triggers will _NOT_ be
- * raised if parsing fails and this method returns an error.
- *
- * \see VLCMediaParsingOptions
- */
-- (int)parseWithOptions:(VLCMediaParsingOptions)options timeout:(int)timeoutValue;
-
-/**
- * Triggers an asynchronous parse of the media item using the given options.
- *
- * The VLCLibrary \p library given in argument will be used to launch the
- * preparsing request, and releasing this VLCLibrary will cancel it.
- *
- * \param options the option mask based on VLCMediaParsingOptions
- * \param timeoutValue a time-out value in milliseconds (-1 for default, 0 for infinite)
- * \return 0 on success, -1 in case of error
- *
- * \note Listen to the "parsed" key value or the mediaDidFinishParsing:
- * delegate method to be notified about parsing results. Those triggers
- * will _NOT_ be raised if parsing fails and this method returns an error.
- *
- * \see VLCMediaParsingOptions
- */
-
-- (int)parseWithOptions:(VLCMediaParsingOptions)options timeout:(int)timeoutValue library:(VLCLibrary*)library;
 
 /**
  * Add options to the media, that will be used to determine how

@@ -140,10 +140,7 @@ static void display(void *opaque, void *picture)
 
     VLCMediaParsedStatus parsedStatus = [_media parsedStatus];
     if (!(parsedStatus == VLCMediaParsedStatusFailed || parsedStatus == VLCMediaParsedStatusDone)) {
-        [_media addObserver:self forKeyPath:@"parsedStatus" options:0 context:NULL];
-        [_media parseWithOptions:VLCMediaParseLocal | VLCMediaParseNetwork];
-        NSAssert(!_parsingTimeoutTimer, @"We already have a timer around");
-        _parsingTimeoutTimer = [NSTimer scheduledTimerWithTimeInterval:10 target:self selector:@selector(mediaParsingTimedOut) userInfo:nil repeats:NO];
+        VKLog(@"WARNING: media wasn't parsed before thumbnailing");
         return;
     }
 
