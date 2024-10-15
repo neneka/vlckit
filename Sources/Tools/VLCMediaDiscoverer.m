@@ -62,9 +62,16 @@ discoverer_item_added(void *opaque, libvlc_media_t *libvlc_parent, libvlc_media_
             VLCMediaDiscoverer *mediaDiscoverer = (VLCMediaDiscoverer *)object;
             VLCMedia *parent;
             if (libvlc_parent != NULL) {
-                parent = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_parent];
+                parent = (__bridge VLCMedia *)libvlc_media_get_user_data(libvlc_parent);
+                if (parent == nil) {
+                    parent = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_parent];
+                }
             }
-            VLCMedia *media = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_media];
+            /* check if a preexisting VLCMedia instance be re-used */
+            VLCMedia *media = (__bridge VLCMedia *)libvlc_media_get_user_data(libvlc_media);
+            if (media == nil) {
+                media = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_media];
+            }
             [mediaDiscoverer itemAdded:media parent:parent];
         }];
     }
@@ -77,7 +84,11 @@ discoverer_item_removed(void *opaque, libvlc_media_t *libvlc_media)
         VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
         [eventsHandler handleEvent:^(id _Nonnull object) {
             VLCMediaDiscoverer *mediaDiscoverer = (VLCMediaDiscoverer *)object;
-            VLCMedia *media = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_media];
+            /* check if a preexisting VLCMedia instance be re-used */
+            VLCMedia *media = (__bridge VLCMedia *)libvlc_media_get_user_data(libvlc_media);
+            if (media == nil) {
+                media = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_media];
+            }
             [mediaDiscoverer itemRemoved:media];
         }];
     }

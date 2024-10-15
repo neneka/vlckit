@@ -188,8 +188,11 @@ void close_cb(void *opaque) {
 
 - (void)dealloc
 {
-    if (p_md)
+    if (p_md) {
+        if (libvlc_media_get_user_data(p_md) == (__bridge void *)self)
+            libvlc_media_set_user_data(p_md, NULL);
         libvlc_media_release(p_md);
+    }
 }
 
 - (VLCMediaType)mediaType
@@ -387,6 +390,9 @@ void close_cb(void *opaque) {
         self.subitems = [VLCMediaList mediaListWithLibVLCMediaList:p_mlist];
         libvlc_media_list_release( p_mlist );
     }
+
+    /* store a self-reference for future lookup */
+    libvlc_media_set_user_data( p_md, (__bridge void *)self);
 }
 
 @end
