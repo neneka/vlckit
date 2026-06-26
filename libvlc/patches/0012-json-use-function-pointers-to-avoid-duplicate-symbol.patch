@@ -1,7 +1,7 @@
 From bf72eaed36471dd7d179c4302c9fa9621c956ebc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
 Date: Wed, 8 Apr 2026 18:02:16 +0200
-Subject: [PATCH 12/12] json: use function pointers to avoid duplicate symbols
+Subject: [PATCH 12/17] json: use function pointers to avoid duplicate symbols
  when statically linking
 
 json_read and json_parse_error were defined as global symbols in each
