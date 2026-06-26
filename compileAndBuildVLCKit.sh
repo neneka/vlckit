@@ -31,7 +31,7 @@ if [ -z "$MAKEFLAGS" ]; then
 fi
 
 BRANCH="fix/macos-display-flickering"
-TESTEDHASH="95f838136617c38b476b97359042ad148c641969" # libvlc hash that this version of VLCKit is build on
+TESTEDHASH="c743be969c62d84528d48706bb1519f391028d23" # libvlc hash that this version of VLCKit is build on
 
 usage()
 {
