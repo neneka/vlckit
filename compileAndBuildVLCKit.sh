@@ -31,7 +31,7 @@ if [ -z "$MAKEFLAGS" ]; then
 fi
 
 BRANCH="master"
-TESTEDHASH="ba63f3c0979845283a3b013cf4a3bf0670c065b7" # libvlc hash that this version of VLCKit is build on
+TESTEDHASH="983bfb26c474ec4f0666068f366f230362b94b6a" # libvlc hash that this version of VLCKit is build on
 
 usage()
 {
