@@ -30,8 +30,8 @@ if [ -z "$MAKEFLAGS" ]; then
     MAKEFLAGS="-j$(sysctl -n machdep.cpu.core_count || nproc)";
 fi
 
-BRANCH="master"
-TESTEDHASH="983bfb26c474ec4f0666068f366f230362b94b6a" # libvlc hash that this version of VLCKit is build on
+BRANCH="fix/macos-display-flickering"
+TESTEDHASH="c743be969c62d84528d48706bb1519f391028d23" # libvlc hash that this version of VLCKit is build on
 
 usage()
 {
