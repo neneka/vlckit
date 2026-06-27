@@ -108,6 +108,14 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
 - (void)mediaPlayerStateChanged:(VLCMediaPlayerState)newState;
 
 /**
+ * Called when the media player signal that its buffering progress changed.
+ * \param progress the buffering progress in the range [0.0, 1.0], where 1.0
+ * means buffering is complete and playback can proceed
+ * \note this is always called with 0.0 and 1.0 before a successful playback
+ */
+- (void)mediaPlayerBufferingChanged:(float)progress;
+
+/**
  * Called when the media player signal that a new track is available
  * for selection.
  * \param trackId the track identifier to find the track

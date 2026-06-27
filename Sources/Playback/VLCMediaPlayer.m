@@ -238,6 +238,18 @@ static void HandleMediaInstanceStateChanged(void *opaque, libvlc_state_t state)
     }
 }
 
+static void HandleMediaPlayerBuffering(void *opaque, float buffering)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayerBufferingChanged:)])
+                [mediaPlayer.delegate mediaPlayerBufferingChanged:buffering];
+        }];
+    }
+}
+
 static VLCMediaTrackType GetMediaTrackType(libvlc_track_type_t trackType)
 {
     switch (trackType)
@@ -482,6 +494,7 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
         static const struct libvlc_media_player_cbs player_cbs = {
             .version = 0,
             .on_state_changed = HandleMediaInstanceStateChanged,
+            .on_buffering_changed = HandleMediaPlayerBuffering,
             .on_length_changed = HandleMediaPlayerLengthChanged,
             .on_track_list_changed = HandleMediaPlayerTrackChanged,
             .on_track_selection_changed = HandleMediaPlayerTrackSelectionChanged,
@@ -1606,6 +1619,7 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
         static const struct libvlc_media_player_cbs cbs = {
             .version = 0,
             .on_state_changed = HandleMediaInstanceStateChanged,
+            .on_buffering_changed = HandleMediaPlayerBuffering,
             .on_length_changed = HandleMediaPlayerLengthChanged,
             .on_track_list_changed = HandleMediaPlayerTrackChanged,
             .on_track_selection_changed = HandleMediaPlayerTrackSelectionChanged,
