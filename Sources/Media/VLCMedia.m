@@ -261,6 +261,12 @@ void close_cb(void *opaque) {
     _parsedStatus = status;
     [self didChangeValueForKey:@"parsedStatus"];
 
+    libvlc_media_list_t * p_mlist = libvlc_media_subitems( p_md );
+    if (p_mlist) {
+        self.subitems = [VLCMediaList mediaListWithLibVLCMediaList:p_mlist];
+        libvlc_media_list_release( p_mlist );
+    }
+
     if ([_delegate respondsToSelector:@selector(mediaDidFinishParsing:)])
         [_delegate mediaDidFinishParsing:self];
 }
