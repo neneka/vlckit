@@ -32,6 +32,35 @@ append_framework_from_archive()
     fi
 }
 
+append_license_debug_sources()
+{
+    debug_zip="$1"
+    manifest="$2"
+
+    if [ ! -f "$manifest" ]; then
+        return
+    fi
+
+    while IFS="$(printf '\t')" read -r _ source_path _; do
+        if [ -z "$source_path" ]; then
+            continue
+        fi
+
+        case "$source_path" in
+            /*)
+                file_path="$source_path"
+                ;;
+            *)
+                file_path="$source_path"
+                ;;
+        esac
+
+        if [ -f "$file_path" ]; then
+            zip -y -q "$debug_zip" "$file_path"
+        fi
+    done < "$manifest"
+}
+
 IOS=no
 TVOS=no
 MACOS=no
@@ -271,6 +300,21 @@ fi
 cp -R Documentation "${DMGFOLDERNAME}"
 cp COPYING "${DMGFOLDERNAME}"
 cp NEWS "${DMGFOLDERNAME}"
+info "Extracting license notices"
+"${root}/Packaging/extract-license-notices.sh" --output "${DMGFOLDERNAME}/License Notices" --evidence-root "${DMGFOLDERNAME}"
+info "Creating license notices archive"
+rm -f "${DMGITEMNAME}-LicenseNotices.zip"
+zip -y -q -r "${DMGITEMNAME}-LicenseNotices.zip" "${DMGFOLDERNAME}/License Notices"
+info "Creating license debug archive"
+rm -f "${DMGITEMNAME}-LicenseDebug.zip"
+zip -y -q -r "${DMGITEMNAME}-LicenseDebug.zip" "${DMGFOLDERNAME}/License Notices"
+zip -y -q "${DMGITEMNAME}-LicenseDebug.zip" COPYING libvlc/vlc/COPYING libvlc/vlc/COPYING.LIB 2> /dev/null || true
+append_license_debug_sources "${DMGITEMNAME}-LicenseDebug.zip" "${DMGFOLDERNAME}/License Notices/manifests/candidate-license-files.tsv"
+if [ -d "libvlc/vlc" ]; then
+    find libvlc/vlc -path '*/static-lib/static-libs-list' -type f | while IFS= read -r static_list; do
+        zip -y -q "${DMGITEMNAME}-LicenseDebug.zip" "$static_list"
+    done
+fi
 spushd "${DMGFOLDERNAME}"
 mv NEWS NEWS.txt
 mv COPYING COPYING.txt
