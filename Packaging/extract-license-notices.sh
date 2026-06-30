@@ -78,6 +78,7 @@ binary_evidence_files_manifest="$output_dir/manifests/binary-evidence-files.txt"
 nested_dependency_evidence_manifest="$output_dir/manifests/nested-dependency-evidence.tsv"
 skipped_unlinked_notice_files_manifest="$output_dir/manifests/skipped-unlinked-license-files.tsv"
 skipped_gpl_notice_files_manifest="$output_dir/manifests/skipped-gpl-license-files.tsv"
+skipped_nonruntime_notice_files_manifest="$output_dir/manifests/skipped-nonruntime-license-files.tsv"
 gpl_only_linked_notice_failures="$output_dir/manifests/gpl-only-linked-license-failures.tsv"
 seen_notice_keys="$output_dir/manifests/.seen-license-files"
 binary_evidence_strings="$output_dir/manifests/.binary-evidence-strings"
@@ -93,6 +94,7 @@ binary_evidence_cache="$output_dir/manifests/.binary-evidence-cache"
 : > "$nested_dependency_evidence_manifest"
 : > "$skipped_unlinked_notice_files_manifest"
 : > "$skipped_gpl_notice_files_manifest"
+: > "$skipped_nonruntime_notice_files_manifest"
 : > "$gpl_only_linked_notice_failures"
 : > "$seen_notice_keys"
 : > "$binary_evidence_strings"
@@ -124,6 +126,11 @@ copy_notice_file()
 
     if is_gpl_only_notice_file "$source_file" "$label"; then
         printf '%s\t%s\t%s\n' "$package" "$(relative_to_project "$source_file")" "GPL-only notice excluded for --disable-gpl builds" >> "$skipped_gpl_notice_files_manifest"
+        return 0
+    fi
+
+    if is_nonruntime_notice_file "$source_file" "$label"; then
+        printf '%s\t%s\t%s\n' "$package" "$(relative_to_project "$source_file")" "non-runtime documentation notice excluded" >> "$skipped_nonruntime_notice_files_manifest"
         return 0
     fi
 
@@ -183,6 +190,117 @@ is_gpl_only_notice_file()
             return 0
             ;;
     esac
+
+    return 1
+}
+
+is_nonruntime_notice_file()
+{
+    local source_file="$1"
+    local label="$2"
+    local name
+
+    name="$(printf '%s %s' "${source_file##*/}" "$label" | LC_ALL=C tr '[:lower:]' '[:upper:]')"
+    case "$name" in
+        *FDL*)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+is_notice_file()
+{
+    local file
+    file="${1##*/}"
+
+    case "$file" in
+        COPYING|COPYING.*|LICENSE|LICENSE.*|License.txt|license.txt|NOTICE|NOTICE.*|Copyright|COPYRIGHT|Copyright.*|COPYRIGHT.*)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+path_has_single_component()
+{
+    case "$1" in
+        ""|*/*)
+            return 1
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+}
+
+nested_dependency_info_from_rest()
+{
+    local rest="$1"
+
+    printf '%s\n' "$rest" | awk -F/ '
+        BEGIN {
+            split("third_party thirdparty third-party 3rdparty contrib", markers, " ")
+            for (i in markers) {
+                marker[markers[i]] = 1
+            }
+        }
+        {
+            for (i = 1; i < NF; i++) {
+                if (($i in marker) && $(i + 1) != "") {
+                    remainder = ""
+                    for (j = i + 2; j <= NF; j++) {
+                        if (remainder != "") {
+                            remainder = remainder "/"
+                        }
+                        remainder = remainder $j
+                    }
+                    print $i "/" $(i + 1) "\t" $(i + 1) "\t" remainder
+                    exit 0
+                }
+            }
+            exit 1
+        }
+    '
+}
+
+nested_dependency_remainder()
+{
+    local rest="$1"
+    local info
+
+    info="$(nested_dependency_info_from_rest "$rest")" || return 1
+    printf '%s\n' "$info" | awk -F '\t' '{ print $3 }'
+}
+
+is_collectable_notice_file()
+{
+    local source_file="$1"
+    local relative_path
+    local rest
+    local nested_rest
+
+    if ! is_notice_file "$source_file"; then
+        return 1
+    fi
+
+    relative_path="$(source_relative_to_vlc_root "$source_file")"
+    case "$relative_path" in
+        contrib/src/*|contrib/tarballs/*|*"/share/doc/"*)
+            return 1
+            ;;
+    esac
+
+    rest="$(source_path_after_package "$relative_path")"
+    if path_has_single_component "$rest"; then
+        return 0
+    fi
+
+    if nested_rest="$(nested_dependency_remainder "$rest")" && path_has_single_component "$nested_rest"; then
+        return 0
+    fi
 
     return 1
 }
@@ -271,54 +389,12 @@ nested_dependency_name()
     local source_file="$1"
     local relative_path
     local rest
+    local info
 
     relative_path="$(source_relative_to_vlc_root "$source_file")"
     rest="$(source_path_after_package "$relative_path")"
-
-    case "$rest" in
-        third_party/*)
-            printf '%s\n' "$rest" | cut -d/ -f2
-            return 0
-            ;;
-        */third_party/*)
-            printf '%s\n' "$rest" | awk -F'/third_party/' '{ print $2 }' | cut -d/ -f1
-            return 0
-            ;;
-        thirdparty/*)
-            printf '%s\n' "$rest" | cut -d/ -f2
-            return 0
-            ;;
-        */thirdparty/*)
-            printf '%s\n' "$rest" | awk -F'/thirdparty/' '{ print $2 }' | cut -d/ -f1
-            return 0
-            ;;
-        third-party/*)
-            printf '%s\n' "$rest" | cut -d/ -f2
-            return 0
-            ;;
-        */third-party/*)
-            printf '%s\n' "$rest" | awk -F'/third-party/' '{ print $2 }' | cut -d/ -f1
-            return 0
-            ;;
-        3rdparty/*)
-            printf '%s\n' "$rest" | cut -d/ -f2
-            return 0
-            ;;
-        */3rdparty/*)
-            printf '%s\n' "$rest" | awk -F'/3rdparty/' '{ print $2 }' | cut -d/ -f1
-            return 0
-            ;;
-        contrib/*)
-            printf '%s\n' "$rest" | cut -d/ -f2
-            return 0
-            ;;
-        */contrib/*)
-            printf '%s\n' "$rest" | awk -F'/contrib/' '{ print $2 }' | cut -d/ -f1
-            return 0
-            ;;
-    esac
-
-    return 1
+    info="$(nested_dependency_info_from_rest "$rest")" || return 1
+    printf '%s\n' "$info" | awk -F '\t' '{ print $2 }'
 }
 
 source_relative_to_vlc_root()
@@ -401,37 +477,17 @@ nested_dependency_has_binary_evidence_uncached()
     fi
 
     case "$nested_package" in
-        mbedtls)
-            grep -Fqi "mbedtls_" "$binary_evidence_strings"
-            ;;
-        SVT-AV1)
-            grep -Eqi 'third_party/SVT-AV1|CONFIG_SVT_AV1|svt_av1' "$binary_evidence_strings"
-            ;;
-        fastfeat)
-            grep -Fqi "third_party/fastfeat" "$binary_evidence_strings"
-            ;;
-        vector)
-            grep -Fqi "third_party/vector" "$binary_evidence_strings"
-            ;;
-        utfcpp)
-            grep -Eqi '3rdparty/utfcpp|utf8-cpp' "$binary_evidence_strings"
-            ;;
-        libwebm)
-            grep -Eqi 'third_party/libwebm|mkvparser|mkvmuxer' "$binary_evidence_strings"
-            ;;
-        liblcms2)
-            grep -Eqi 'thirdparty/liblcms2|cmsCreate|cmsDoTransform' "$binary_evidence_strings"
-            ;;
-        googletest)
-            grep -Eqi 'third_party/googletest|gtest_main|gmock_main|testing::' "$binary_evidence_strings"
-            ;;
-        x86inc)
-            grep -Eqi 'third_party/x86inc|x86inc' "$binary_evidence_strings"
-            ;;
-        *)
+        ""|*[!A-Za-z0-9_-]*)
             return 1
             ;;
     esac
+
+    if [ "${#nested_package}" -lt 5 ]; then
+        return 1
+    fi
+
+    grep -Fqi "${nested_package}_" "$binary_evidence_strings" \
+        || grep -Fqi "${nested_package}-" "$binary_evidence_strings"
 }
 
 nested_dependency_marker()
@@ -439,56 +495,12 @@ nested_dependency_marker()
     local source_file="$1"
     local relative_path
     local rest
-    local nested_package
+    local info
 
     relative_path="$(source_relative_to_vlc_root "$source_file")"
     rest="$(source_path_after_package "$relative_path")"
-
-    case "$rest" in
-        *"/third_party/"*)
-            nested_package="$(printf '%s\n' "$rest" | awk -F'/third_party/' '{ print $2 }' | cut -d/ -f1)"
-            printf 'third_party/%s\n' "$nested_package"
-            ;;
-        third_party/*)
-            nested_package="$(printf '%s\n' "$rest" | cut -d/ -f2)"
-            printf 'third_party/%s\n' "$nested_package"
-            ;;
-        *"/thirdparty/"*)
-            nested_package="$(printf '%s\n' "$rest" | awk -F'/thirdparty/' '{ print $2 }' | cut -d/ -f1)"
-            printf 'thirdparty/%s\n' "$nested_package"
-            ;;
-        thirdparty/*)
-            nested_package="$(printf '%s\n' "$rest" | cut -d/ -f2)"
-            printf 'thirdparty/%s\n' "$nested_package"
-            ;;
-        *"/third-party/"*)
-            nested_package="$(printf '%s\n' "$rest" | awk -F'/third-party/' '{ print $2 }' | cut -d/ -f1)"
-            printf 'third-party/%s\n' "$nested_package"
-            ;;
-        third-party/*)
-            nested_package="$(printf '%s\n' "$rest" | cut -d/ -f2)"
-            printf 'third-party/%s\n' "$nested_package"
-            ;;
-        *"/3rdparty/"*)
-            nested_package="$(printf '%s\n' "$rest" | awk -F'/3rdparty/' '{ print $2 }' | cut -d/ -f1)"
-            printf '3rdparty/%s\n' "$nested_package"
-            ;;
-        3rdparty/*)
-            nested_package="$(printf '%s\n' "$rest" | cut -d/ -f2)"
-            printf '3rdparty/%s\n' "$nested_package"
-            ;;
-        *"/contrib/"*)
-            nested_package="$(printf '%s\n' "$rest" | awk -F'/contrib/' '{ print $2 }' | cut -d/ -f1)"
-            printf 'contrib/%s\n' "$nested_package"
-            ;;
-        contrib/*)
-            nested_package="$(printf '%s\n' "$rest" | cut -d/ -f2)"
-            printf 'contrib/%s\n' "$nested_package"
-            ;;
-        *)
-            return 1
-            ;;
-    esac
+    info="$(nested_dependency_info_from_rest "$rest")" || return 1
+    printf '%s\n' "$info" | awk -F '\t' '{ print $1 }'
 }
 
 notice_dedupe_key()
@@ -541,6 +553,8 @@ normalize_package_name()
         libpng|libpng16) echo "png" ;;
         libaom) echo "aom" ;;
         FLAC|libFLAC|libflac) echo "flac" ;;
+        libgsm) echo "gsm" ;;
+        xml2) echo "libxml2" ;;
         libjpeg|jpeg-turbo) echo "jpeg" ;;
         libfreetype|freetype) echo "freetype2" ;;
         libvorbis|libvorbisenc|libvorbisfile) echo "vorbis" ;;
@@ -694,6 +708,7 @@ package_has_accepted_notice()
 {
     local package="$1"
 
+    package="$(normalize_package_name "$package")"
     awk -F '\t' -v package="$package" '$1 == package { found = 1 } END { exit !found }' "$license_files_manifest"
 }
 
@@ -772,6 +787,11 @@ process_candidate_notice_file()
 
     if is_gpl_only_notice_file "$notice_file" "$rel"; then
         printf '%s\t%s\t%s\n' "$notice_package" "$rel" "GPL-only notice excluded for --disable-gpl builds" >> "$skipped_gpl_notice_files_manifest"
+        return 0
+    fi
+
+    if is_nonruntime_notice_file "$notice_file" "$rel"; then
+        printf '%s\t%s\t%s\n' "$notice_package" "$rel" "non-runtime documentation notice excluded" >> "$skipped_nonruntime_notice_files_manifest"
         return 0
     fi
 
@@ -854,12 +874,16 @@ build_binary_evidence_index "$evidence_root"
 
 if [ -d "$vlc_root/contrib" ]; then
     while IFS= read -r notice_file; do
+        if ! is_collectable_notice_file "$notice_file"; then
+            continue
+        fi
         process_candidate_notice_file "$notice_file"
     done < <(
         find "$vlc_root/contrib" -type f \
             \( -iname 'COPYING' -o -iname 'COPYING.*' \
             -o -iname 'LICENSE' -o -iname 'LICENSE.*' \
-            -o -iname 'NOTICE' -o -iname 'NOTICE.*' \) \
+            -o -iname 'NOTICE' -o -iname 'NOTICE.*' \
+            -o -iname 'Copyright' -o -iname 'Copyright.*' \) \
             ! -path "$vlc_root/contrib/src/*" \
             ! -path "$vlc_root/contrib/tarballs/*" \
             | sort
@@ -868,12 +892,16 @@ fi
 
 if [ -d "$vlc_root" ]; then
     while IFS= read -r notice_file; do
+        if ! is_collectable_notice_file "$notice_file"; then
+            continue
+        fi
         process_candidate_notice_file "$notice_file"
     done < <(
         find "$vlc_root" -maxdepth 3 -type f \
             \( -iname 'COPYING' -o -iname 'COPYING.*' \
             -o -iname 'LICENSE' -o -iname 'LICENSE.*' \
-            -o -iname 'NOTICE' -o -iname 'NOTICE.*' \) \
+            -o -iname 'NOTICE' -o -iname 'NOTICE.*' \
+            -o -iname 'Copyright' -o -iname 'Copyright.*' \) \
             ! -path "$vlc_root/contrib/*" \
             ! -path "$vlc_root/build*/*" \
             ! -path "$vlc_root/COPYING" \
@@ -890,11 +918,11 @@ verify_no_gpl_only_linked_notice_gaps
     echo
     echo "This bundle was generated from the VLCKit build workspace."
     echo "It includes the VLCKit license, VLC/libVLC license files, build manifests,"
-    echo "and license/notice files found in the built VLC contrib source/install trees."
+    echo "and top-level license/notice files found in the built VLC contrib source/install trees."
     echo "License notices are copied as licenses/<name>.txt."
     echo "Nested bundled notices are split out only when the nested package is linked separately"
     echo "or observed in the generated framework/dSYM binary evidence."
-    echo "When multiple non-GPL source files map to the same output name, they are concatenated."
+    echo "When multiple non-GPL, non-documentation source files map to the same output name, they are concatenated."
     echo "Individual license files contain the original notice text without generated metadata."
     echo
     echo "Important files:"
@@ -908,6 +936,7 @@ verify_no_gpl_only_linked_notice_gaps
     echo "- manifests/license-files.tsv: source license files and their copied output path"
     echo "- manifests/skipped-unlinked-license-files.tsv: candidate files excluded because their package was not linked"
     echo "- manifests/skipped-gpl-license-files.tsv: GPL-only license files excluded for --disable-gpl builds"
+    echo "- manifests/skipped-nonruntime-license-files.tsv: documentation-only notices excluded from runtime notices"
     echo "- manifests/gpl-only-linked-license-failures.tsv: fatal GPL-only linked/evidenced packages without non-GPL notices"
     echo "- VLCKit-LICENSES-THIRD-PARTY.txt: concatenated notice text for application bundling"
     echo
