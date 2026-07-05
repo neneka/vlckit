@@ -51,6 +51,7 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerChapterChangedNotificat
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerSnapshotTakenNotification NS_SWIFT_NAME(VLCMediaPlayer.snapshotTakenNotification);
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerProgramListChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.programListChangedNotification);
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerProgramSelectionChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.programSelectionChangedNotification);
+FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerCapabilitiesChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.capabilitiesChangedNotification); ///< Notification message for when the player's capabilities (such as seekable or canPause) have changed
 
 /**
  * VLCMediaPlayerState describes the state of the media player.
