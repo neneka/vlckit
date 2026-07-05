@@ -59,6 +59,8 @@ NSNotificationName const VLCMediaPlayerTitleSelectionChangedNotification = @"VLC
 NSNotificationName const VLCMediaPlayerTitleListChangedNotification = @"VLCMediaPlayerTitleListChangedNotification";
 NSNotificationName const VLCMediaPlayerChapterChangedNotification = @"VLCMediaPlayerChapterChangedNotification";
 NSNotificationName const VLCMediaPlayerSnapshotTakenNotification = @"VLCMediaPlayerSnapshotTakenNotification";
+NSNotificationName const VLCMediaPlayerProgramListChangedNotification = @"VLCMediaPlayerProgramListChangedNotification";
+NSNotificationName const VLCMediaPlayerProgramSelectionChangedNotification = @"VLCMediaPlayerProgramSelectionChangedNotification";
 
 static_assert(VLCAudioStereoModeUnset == libvlc_AudioStereoMode_Unset
            && VLCAudioStereoModeStereo == libvlc_AudioStereoMode_Stereo
@@ -444,6 +446,36 @@ static void HandleMediaTitleListChanged(void * opaque)
     }
 }
 
+static void HandleMediaProgramListChanged(void *opaque, libvlc_list_action_t action,
+                                          int group_id)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
+            NSNotification *notification = [NSNotification notificationWithName: VLCMediaPlayerProgramListChangedNotification object: mediaPlayer];
+            [[NSNotificationCenter defaultCenter] postNotification: notification];
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayerProgramListChanged:)])
+                [mediaPlayer.delegate mediaPlayerProgramListChanged: notification];
+        }];
+    }
+}
+
+static void HandleMediaProgramSelectionChanged(void *opaque, int unselected_group_id,
+                                               int selected_group_id)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
+            NSNotification *notification = [NSNotification notificationWithName: VLCMediaPlayerProgramSelectionChangedNotification object: mediaPlayer];
+            [[NSNotificationCenter defaultCenter] postNotification: notification];
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayerProgramSelectionChanged:)])
+                [mediaPlayer.delegate mediaPlayerProgramSelectionChanged: notification];
+        }];
+    }
+}
+
 static void HandleMediaChapterChanged(void *opaque,
                                       const libvlc_title_description_t *title,
                                       unsigned title_idx,
@@ -613,6 +645,8 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_title_selection_changed = HandleMediaTitleSelectionChanged,
             .on_titles_changed = HandleMediaTitleListChanged,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
+            .on_program_list_changed = HandleMediaProgramListChanged,
+            .on_program_selection_changed = HandleMediaProgramSelectionChanged,
             .on_screenshot_taken = HandleMediaPlayerSnapshot,
             .on_recording_changed = HandleMediaPlayerRecord,
             .on_next_frame_status = HandleMediaPlayerNextFrameStatus,
@@ -1748,6 +1782,8 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_title_selection_changed = HandleMediaTitleSelectionChanged,
             .on_titles_changed = HandleMediaTitleListChanged,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
+            .on_program_list_changed = HandleMediaProgramListChanged,
+            .on_program_selection_changed = HandleMediaProgramSelectionChanged,
             .on_screenshot_taken = HandleMediaPlayerSnapshot,
             .on_recording_changed = HandleMediaPlayerRecord,
             .on_next_frame_status = HandleMediaPlayerNextFrameStatus,

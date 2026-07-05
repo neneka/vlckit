@@ -49,6 +49,8 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerTitleSelectionChangedNo
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerTitleListChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.titleListChangedNotification);
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerChapterChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.chapterChangedNotification);
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerSnapshotTakenNotification NS_SWIFT_NAME(VLCMediaPlayer.snapshotTakenNotification);
+FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerProgramListChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.programListChangedNotification);
+FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerProgramSelectionChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.programSelectionChangedNotification);
 
 /**
  * VLCMediaPlayerState describes the state of the media player.
@@ -197,6 +199,20 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
  * the VLCMediaPlayer object in question by sending object to aNotification.
  */
 - (void)mediaPlayerChapterChanged:(NSNotification *)aNotification;
+
+/**
+ * Sent by the default notification center whenever the player's list of programs has changed.
+ * \details Discussion The value of aNotification is always an VLCMediaPlayerProgramListChanged notification. You can retrieve
+ * the VLCMediaPlayer object in question by sending object to aNotification. Request programs to get the actual list.
+ */
+- (void)mediaPlayerProgramListChanged:(NSNotification *)aNotification;
+
+/**
+ * Sent by the default notification center whenever the player's selected program has changed.
+ * \details Discussion The value of aNotification is always an VLCMediaPlayerProgramSelectionChanged notification. You can retrieve
+ * the VLCMediaPlayer object in question by sending object to aNotification.
+ */
+- (void)mediaPlayerProgramSelectionChanged:(NSNotification *)aNotification;
 
 /**
  * Sent by the default notification center whenever a new snapshot is taken.
