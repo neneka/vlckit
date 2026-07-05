@@ -126,6 +126,13 @@ NS_ASSUME_NONNULL_BEGIN
  * subitems. Refreshes the subitems list.
  */
 - (void)subitemsChanged;
+
+/**
+ * Called by the media player when libvlc reports a new embedded artwork
+ * attachment. Stores it on the metadata and notifies observers.
+ * \param imageData the encoded image data of the attachment
+ */
+- (void)artworkAttachmentReceived:(NSData *)imageData;
 @end
 
 /**
@@ -246,6 +253,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithMedia:(VLCMedia *)media;
 
 - (void)handleMediaMetaChanged:(const libvlc_meta_t)type;
+
+/**
+ * Decodes and caches the embedded artwork delivered as an attachment.
+ * \param imageData the encoded image data
+ * \return YES if the data could be decoded into an image, NO otherwise
+ */
+- (BOOL)setArtworkWithData:(NSData *)imageData;
 
 @end
 

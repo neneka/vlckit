@@ -37,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 FOUNDATION_EXPORT NSNotificationName const VLCMediaMetaChangedNotification NS_SWIFT_NAME(VLCMedia.metaChangedNotification); ///< Notification message for when the media's meta data has changed
 FOUNDATION_EXPORT NSNotificationName const VLCMediaSubitemsChangedNotification NS_SWIFT_NAME(VLCMedia.subitemsChangedNotification); ///< Notification message for when the media's subitems have changed
+FOUNDATION_EXPORT NSNotificationName const VLCMediaArtworkChangedNotification NS_SWIFT_NAME(VLCMedia.artworkChangedNotification); ///< Notification message for when the media's embedded artwork became available
 
 // Forward declarations, supresses compiler error messages
 @class VLCLibrary;
@@ -69,6 +70,13 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaSubitemsChangedNotification N
  * \param aMedia The media resource whose subitems have changed.
  */
 - (void)mediaDidChangeSubitems:(VLCMedia *)aMedia;
+
+/**
+ * Delegate method called whenever embedded artwork became available on the media.
+ * \note The artwork can be retrieved through the media's metaData.
+ * \param aMedia The media resource whose artwork became available.
+ */
+- (void)mediaDidChangeArtwork:(VLCMedia *)aMedia;
 
 @end
 

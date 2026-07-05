@@ -316,6 +316,15 @@
     return _artwork;
 }
 
+- (BOOL)setArtworkWithData:(NSData *)imageData
+{
+    VLCPlatformImage *image = [[VLCPlatformImage alloc] initWithData: imageData];
+    if (!image)
+        return NO;
+    _artwork = image;
+    return YES;
+}
+
 - (nullable NSString *)extraValueForKey:(NSString *)key
 {
     return [self extraCacheValueForKey: key];

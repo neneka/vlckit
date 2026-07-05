@@ -377,6 +377,41 @@ static void HandleMediaPlayerMediaSubItemsChanged(void *opaque, libvlc_media_t *
     }
 }
 
+static void HandleMediaPlayerMediaAttachmentsAdded(void *opaque, libvlc_media_t *libvlc_media,
+                                                   libvlc_picture_list_t *list)
+{
+    @autoreleasepool {
+        if (libvlc_media == NULL || list == NULL)
+            return;
+
+        /* The picture list is only valid during this callback, so copy out the
+         * first decodable attachment before dispatching to the delegate. */
+        NSData *artworkData = nil;
+        size_t count = libvlc_picture_list_count(list);
+        for (size_t i = 0; i < count; i++) {
+            libvlc_picture_t *picture = libvlc_picture_list_at(list, i);
+            if (picture == NULL)
+                continue;
+            size_t size = 0;
+            const uint8_t *buffer = libvlc_picture_get_buffer(picture, &size);
+            if (buffer != NULL && size > 0) {
+                artworkData = [NSData dataWithBytes:buffer length:size];
+                break;
+            }
+        }
+        if (artworkData == nil)
+            return;
+
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMedia *media = (__bridge VLCMedia *)libvlc_media_get_user_data(libvlc_media);
+            if (media == nil)
+                media = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_media];
+            [media artworkAttachmentReceived:artworkData];
+        }];
+    }
+}
+
 static void HandleMediaTitleSelectionChanged(void *opaque,
                                              const libvlc_title_description_t *title,
                                              unsigned idx)
@@ -574,6 +609,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_media_changed = HandleMediaPlayerMediaChanged,
             .on_media_meta_changed = HandleMediaPlayerMediaMetaChanged,
             .on_media_subitems_changed = HandleMediaPlayerMediaSubItemsChanged,
+            .on_media_attachments_added = HandleMediaPlayerMediaAttachmentsAdded,
             .on_title_selection_changed = HandleMediaTitleSelectionChanged,
             .on_titles_changed = HandleMediaTitleListChanged,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
@@ -1708,6 +1744,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_media_changed = HandleMediaPlayerMediaChanged,
             .on_media_meta_changed = HandleMediaPlayerMediaMetaChanged,
             .on_media_subitems_changed = HandleMediaPlayerMediaSubItemsChanged,
+            .on_media_attachments_added = HandleMediaPlayerMediaAttachmentsAdded,
             .on_title_selection_changed = HandleMediaTitleSelectionChanged,
             .on_titles_changed = HandleMediaTitleListChanged,
             .on_chapter_selection_changed = HandleMediaChapterChanged,

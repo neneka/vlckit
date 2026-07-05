@@ -39,6 +39,7 @@
 /* Notification Messages */
 NSNotificationName const VLCMediaMetaChangedNotification = @"VLCMediaMetaChangedNotification";
 NSNotificationName const VLCMediaSubitemsChangedNotification = @"VLCMediaSubitemsChangedNotification";
+NSNotificationName const VLCMediaArtworkChangedNotification = @"VLCMediaArtworkChangedNotification";
 
 /******************************************************************************
  * VLC callbacks for streaming.
@@ -295,6 +296,18 @@ void close_cb(void *opaque) {
         [_delegate mediaDidChangeSubitems:self];
 
     NSNotification *notification = [NSNotification notificationWithName:VLCMediaSubitemsChangedNotification object:self];
+    [[NSNotificationCenter defaultCenter] postNotification:notification];
+}
+
+- (void)artworkAttachmentReceived:(NSData *)imageData
+{
+    if (![self.metaData setArtworkWithData:imageData])
+        return;
+
+    if ([_delegate respondsToSelector:@selector(mediaDidChangeArtwork:)])
+        [_delegate mediaDidChangeArtwork:self];
+
+    NSNotification *notification = [NSNotification notificationWithName:VLCMediaArtworkChangedNotification object:self];
     [[NSNotificationCenter defaultCenter] postNotification:notification];
 }
 
