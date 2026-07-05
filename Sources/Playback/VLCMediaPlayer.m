@@ -1691,8 +1691,8 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
 {
     [self willChangeValueForKey:@"state"];
     _cachedState = newState;
-    
-    if ([self isPlaying]) {
+
+    if (newState == VLCMediaPlayerStatePlaying) {
         [self startTimeChangeUpdateTimer];
 #if !TARGET_OS_IPHONE
         [self preventDisplaySleep];
