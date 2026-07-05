@@ -35,6 +35,7 @@
 #import <VLCAdjustFilter.h>
 #import <VLCAudioEqualizer.h>
 #import <VLCEventsHandler.h>
+#import <VLCAudio.h>
 #import <VLCMediaPlayerTitleDescription.h>
 #if !TARGET_OS_IPHONE
 # import <VLCVideoView.h>
@@ -251,6 +252,18 @@ static void HandleMediaPlayerBuffering(void *opaque, float buffering)
             VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
             if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayerBufferingChanged:)])
                 [mediaPlayer.delegate mediaPlayerBufferingChanged:buffering];
+        }];
+    }
+}
+
+static void HandleMediaPlayerAudioVolumeChanged(void *opaque, float volume)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
+            NSNotification *notification = [NSNotification notificationWithName: VLCMediaPlayerVolumeChangedNotification object: mediaPlayer];
+            [[NSNotificationCenter defaultCenter] postNotification: notification];
         }];
     }
 }
@@ -666,6 +679,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_program_selection_changed = HandleMediaProgramSelectionChanged,
             .on_screenshot_taken = HandleMediaPlayerSnapshot,
             .on_recording_changed = HandleMediaPlayerRecord,
+            .on_audio_volume_changed = HandleMediaPlayerAudioVolumeChanged,
             .on_next_frame_status = HandleMediaPlayerNextFrameStatus,
             .on_prev_frame_status = HandleMediaPlayerPreviousFrameStatus,
         };
@@ -1812,6 +1826,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_program_selection_changed = HandleMediaProgramSelectionChanged,
             .on_screenshot_taken = HandleMediaPlayerSnapshot,
             .on_recording_changed = HandleMediaPlayerRecord,
+            .on_audio_volume_changed = HandleMediaPlayerAudioVolumeChanged,
             .on_next_frame_status = HandleMediaPlayerNextFrameStatus,
             .on_prev_frame_status = HandleMediaPlayerPreviousFrameStatus,
         };
