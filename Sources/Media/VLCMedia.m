@@ -38,6 +38,7 @@
 
 /* Notification Messages */
 NSNotificationName const VLCMediaMetaChangedNotification = @"VLCMediaMetaChangedNotification";
+NSNotificationName const VLCMediaSubitemsChangedNotification = @"VLCMediaSubitemsChangedNotification";
 
 /******************************************************************************
  * VLC callbacks for streaming.
@@ -279,6 +280,21 @@ void close_cb(void *opaque) {
         [_delegate mediaMetaDataDidChange:self];
 
     NSNotification *notification = [NSNotification notificationWithName:VLCMediaMetaChangedNotification object:self];
+    [[NSNotificationCenter defaultCenter] postNotification:notification];
+}
+
+- (void)subitemsChanged
+{
+    libvlc_media_list_t *p_mlist = libvlc_media_subitems(p_md);
+    if (p_mlist) {
+        self.subitems = [VLCMediaList mediaListWithLibVLCMediaList:p_mlist];
+        libvlc_media_list_release(p_mlist);
+    }
+
+    if ([_delegate respondsToSelector:@selector(mediaDidChangeSubitems:)])
+        [_delegate mediaDidChangeSubitems:self];
+
+    NSNotification *notification = [NSNotification notificationWithName:VLCMediaSubitemsChangedNotification object:self];
     [[NSNotificationCenter defaultCenter] postNotification:notification];
 }
 

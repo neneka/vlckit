@@ -120,6 +120,12 @@ NS_ASSUME_NONNULL_BEGIN
  * been updated. Invalidates the cached metadata and notifies observers.
  */
 - (void)metaChanged;
+
+/**
+ * Called by the media player when libvlc reports that the media gained new
+ * subitems. Refreshes the subitems list.
+ */
+- (void)subitemsChanged;
 @end
 
 /**

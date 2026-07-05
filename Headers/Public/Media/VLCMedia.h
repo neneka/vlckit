@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Available notification messages.
  */
 FOUNDATION_EXPORT NSNotificationName const VLCMediaMetaChangedNotification NS_SWIFT_NAME(VLCMedia.metaChangedNotification); ///< Notification message for when the media's meta data has changed
+FOUNDATION_EXPORT NSNotificationName const VLCMediaSubitemsChangedNotification NS_SWIFT_NAME(VLCMedia.subitemsChangedNotification); ///< Notification message for when the media's subitems have changed
 
 // Forward declarations, supresses compiler error messages
 @class VLCLibrary;
@@ -62,6 +63,12 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaMetaChangedNotification NS_SW
  * \param aMedia The media resource whose meta data has been changed.
  */
 - (void)mediaDidFinishParsing:(VLCMedia *)aMedia;
+
+/**
+ * Delegate method called whenever the media gained new subitems.
+ * \param aMedia The media resource whose subitems have changed.
+ */
+- (void)mediaDidChangeSubitems:(VLCMedia *)aMedia;
 
 @end
 
