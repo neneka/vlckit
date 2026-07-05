@@ -28,6 +28,7 @@
 #import <VLCMediaListPlayer.h>
 #import <VLCMedia.h>
 #import <VLCMediaPlayer.h>
+#import <VLCMediaPlayer+Internal.h>
 #import <VLCMediaList.h>
 #import <VLCLibVLCBridging.h>
 #import <VLCLibrary.h>
@@ -60,13 +61,47 @@ static void HandleMediaChanged(void *opaque, libvlc_media_t *md)
 
 static void HandleStateChanged(void *opaque, libvlc_state_t state)
 {
+    VLCMediaPlayerState newState;
+
+    switch (state) {
+        case libvlc_Playing:
+            newState = VLCMediaPlayerStatePlaying;
+            break;
+        case libvlc_Paused:
+            newState = VLCMediaPlayerStatePaused;
+            break;
+        case libvlc_Stopping:
+            newState = VLCMediaPlayerStateStopping;
+            break;
+        case libvlc_Stopped:
+            newState = VLCMediaPlayerStateStopped;
+            break;
+        case libvlc_Error:
+            newState = VLCMediaPlayerStateError;
+            break;
+        case libvlc_Opening:
+            newState = VLCMediaPlayerStateOpening;
+            break;
+
+        default:
+            VKLog(@"%s: Unknown event", __FUNCTION__);
+            return;
+    }
+
     @autoreleasepool {
         VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
         [eventsHandler handleEvent:^(id _Nonnull object) {
-            if (state == libvlc_Stopped) {
-                VLCMediaListPlayer *mediaListPlayer = (VLCMediaListPlayer *)object;
+            VLCMediaListPlayer *mediaListPlayer = (VLCMediaListPlayer *)object;
+            VLCMediaPlayer *mediaPlayer = mediaListPlayer.mediaPlayer;
+
+            [mediaPlayer mediaPlayerStateChanged:newState];
+            NSNotification *notification = [NSNotification notificationWithName:VLCMediaPlayerStateChangedNotification object:mediaPlayer];
+            [[NSNotificationCenter defaultCenter] postNotification:notification];
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayerStateChanged:)])
+                [mediaPlayer.delegate mediaPlayerStateChanged:newState];
+
+            if (state == libvlc_Stopped)
                 [mediaListPlayer mediaListPlayerStopped];
-            }
         }];
     }
 }
