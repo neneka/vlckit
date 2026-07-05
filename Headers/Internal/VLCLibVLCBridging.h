@@ -114,6 +114,12 @@ NS_ASSUME_NONNULL_BEGIN
  * \param value the length value
  */
 - (void)setLength:(VLCTime *)value;
+
+/**
+ * Called by the media player when libvlc reports that the media's metadata has
+ * been updated. Invalidates the cached metadata and notifies observers.
+ */
+- (void)metaChanged;
 @end
 
 /**

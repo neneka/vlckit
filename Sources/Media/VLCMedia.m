@@ -271,6 +271,17 @@ void close_cb(void *opaque) {
         [_delegate mediaDidFinishParsing:self];
 }
 
+- (void)metaChanged
+{
+    [self.metaData clearCache];
+
+    if ([_delegate respondsToSelector:@selector(mediaMetaDataDidChange:)])
+        [_delegate mediaMetaDataDidChange:self];
+
+    NSNotification *notification = [NSNotification notificationWithName:VLCMediaMetaChangedNotification object:self];
+    [[NSNotificationCenter defaultCenter] postNotification:notification];
+}
+
 - (void)addOption:(NSString *)option
 {
     libvlc_media_add_option(p_md, [option UTF8String]);

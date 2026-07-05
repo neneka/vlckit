@@ -347,6 +347,21 @@ static void HandleMediaPlayerMediaChanged(void *opaque, libvlc_media_t *libvlc_m
     }
 }
 
+static void HandleMediaPlayerMediaMetaChanged(void *opaque, libvlc_media_t *libvlc_media)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            if (libvlc_media == NULL)
+                return;
+            VLCMedia *media = (__bridge VLCMedia *)libvlc_media_get_user_data(libvlc_media);
+            if (media == nil)
+                media = [VLCMedia mediaWithLibVLCMediaDescriptor:libvlc_media];
+            [media metaChanged];
+        }];
+    }
+}
+
 static void HandleMediaTitleSelectionChanged(void *opaque,
                                              const libvlc_title_description_t *title,
                                              unsigned idx)
@@ -542,6 +557,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_track_list_changed = HandleMediaPlayerTrackChanged,
             .on_track_selection_changed = HandleMediaPlayerTrackSelectionChanged,
             .on_media_changed = HandleMediaPlayerMediaChanged,
+            .on_media_meta_changed = HandleMediaPlayerMediaMetaChanged,
             .on_title_selection_changed = HandleMediaTitleSelectionChanged,
             .on_titles_changed = HandleMediaTitleListChanged,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
@@ -1674,6 +1690,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
             .on_track_list_changed = HandleMediaPlayerTrackChanged,
             .on_track_selection_changed = HandleMediaPlayerTrackSelectionChanged,
             .on_media_changed = HandleMediaPlayerMediaChanged,
+            .on_media_meta_changed = HandleMediaPlayerMediaMetaChanged,
             .on_title_selection_changed = HandleMediaTitleSelectionChanged,
             .on_titles_changed = HandleMediaTitleListChanged,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
