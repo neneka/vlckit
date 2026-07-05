@@ -87,6 +87,20 @@ typedef NS_ENUM(NSInteger, VLCDeinterlace)
 };
 
 /**
+ * VLCMediaPlayerFrameStepResult describes the outcome of a frame step requested
+ * through -gotoNextFrame or -gotoPreviousFrame.
+ */
+typedef NS_ENUM(NSInteger, VLCMediaPlayerFrameStepResult)
+{
+    VLCMediaPlayerFrameStepResultSuccess = 0,       ///< The frame was stepped successfully
+    VLCMediaPlayerFrameStepResultPending,           ///< First step request, the player is being paused
+    VLCMediaPlayerFrameStepResultVideoError,        ///< The video output reported an error
+    VLCMediaPlayerFrameStepResultCannotPause,       ///< The stream cannot be paused
+    VLCMediaPlayerFrameStepResultInvalidState,      ///< The player is in an invalid state to step
+    VLCMediaPlayerFrameStepResultCannotSeekBack,    ///< The player could not seek back (previous frame only)
+};
+
+/**
  * Returns the name of the player state as a string.
  * \param state The player state.
  * \return A string containing the name of state. If state is not a valid state, returns nil.
@@ -203,6 +217,20 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
  * @param url the path to the file that the player recorded to
  */
 - (void)mediaPlayer:(VLCMediaPlayer *)player recordingStoppedAtURL:(nullable NSURL *)url;
+
+/**
+ * Sent when the frame requested through -gotoNextFrame is about to be displayed.
+ * @param player the player performing the frame step
+ * @param result the outcome of the frame step
+ */
+- (void)mediaPlayer:(VLCMediaPlayer *)player nextFrameSteppedWithResult:(VLCMediaPlayerFrameStepResult)result;
+
+/**
+ * Sent when the frame requested through -gotoPreviousFrame is about to be displayed.
+ * @param player the player performing the frame step
+ * @param result the outcome of the frame step
+ */
+- (void)mediaPlayer:(VLCMediaPlayer *)player previousFrameSteppedWithResult:(VLCMediaPlayerFrameStepResult)result;
 
 @end
 
@@ -714,8 +742,17 @@ typedef NS_ENUM(unsigned, VLCAudioMixMode)
 
 /**
  * Advance one frame.
+ * \note The player must be playing or paused. If playing, it will be paused first.
+ * \note Listen to -mediaPlayer:nextFrameSteppedWithResult: to be notified when the frame is displayed.
  */
 - (void)gotoNextFrame;
+
+/**
+ * Step back one frame.
+ * \note Works only on streams that support pause, seek and pace control. If playing, the player will be paused first.
+ * \note Listen to -mediaPlayer:previousFrameSteppedWithResult: to be notified when the frame is displayed.
+ */
+- (void)gotoPreviousFrame;
 
 /**
  * Fast forwards through the feed at the standard 1x rate.

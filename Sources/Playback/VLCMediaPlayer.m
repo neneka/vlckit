@@ -50,6 +50,7 @@
 #endif // !TARGET_OS_IPHONE
 
 #include <vlc/vlc.h>
+#include <errno.h>
 
 /* Notification Messages */
 NSNotificationName const VLCMediaPlayerTimeChangedNotification = @"VLCMediaPlayerTimeChangedNotification";
@@ -447,6 +448,45 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
     }
 }
 
+static VLCMediaPlayerFrameStepResult GetFrameStepResult(int status)
+{
+    switch (-status) {
+        case 0:       return VLCMediaPlayerFrameStepResultSuccess;
+        case EAGAIN:  return VLCMediaPlayerFrameStepResultPending;
+        case EBUSY:   return VLCMediaPlayerFrameStepResultVideoError;
+        case ENOTSUP: return VLCMediaPlayerFrameStepResultCannotPause;
+        case ERANGE:  return VLCMediaPlayerFrameStepResultCannotSeekBack;
+        case EINVAL:
+        default:      return VLCMediaPlayerFrameStepResultInvalidState;
+    }
+}
+
+static void HandleMediaPlayerNextFrameStatus(void *opaque, int status)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        VLCMediaPlayerFrameStepResult result = GetFrameStepResult(status);
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayer:nextFrameSteppedWithResult:)])
+                [mediaPlayer.delegate mediaPlayer:mediaPlayer nextFrameSteppedWithResult:result];
+        }];
+    }
+}
+
+static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
+{
+    @autoreleasepool {
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
+        VLCMediaPlayerFrameStepResult result = GetFrameStepResult(status);
+        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMediaPlayer *mediaPlayer = (VLCMediaPlayer *)object;
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayer:previousFrameSteppedWithResult:)])
+                [mediaPlayer.delegate mediaPlayer:mediaPlayer previousFrameSteppedWithResult:result];
+        }];
+    }
+}
+
 @implementation VLCMediaPlayer
 @synthesize libraryInstance = _privateLibrary;
 
@@ -507,6 +547,8 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
             .on_screenshot_taken = HandleMediaPlayerSnapshot,
             .on_recording_changed = HandleMediaPlayerRecord,
+            .on_next_frame_status = HandleMediaPlayerNextFrameStatus,
+            .on_prev_frame_status = HandleMediaPlayerPreviousFrameStatus,
         };
         _playerInstance = libvlc_media_player_new([_privateLibrary instance],
                                                   &player_cbs, (__bridge void *)_eventsHandler);
@@ -1371,6 +1413,11 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
     libvlc_media_player_next_frame(_playerInstance);
 }
 
+- (void)gotoPreviousFrame
+{
+    libvlc_media_player_previous_frame(_playerInstance);
+}
+
 - (void)fastForward
 {
     [self fastForwardAtRate: 2.0];
@@ -1632,6 +1679,8 @@ static void HandleMediaPlayerRecord(void *opaque, bool recording,
             .on_chapter_selection_changed = HandleMediaChapterChanged,
             .on_screenshot_taken = HandleMediaPlayerSnapshot,
             .on_recording_changed = HandleMediaPlayerRecord,
+            .on_next_frame_status = HandleMediaPlayerNextFrameStatus,
+            .on_prev_frame_status = HandleMediaPlayerPreviousFrameStatus,
         };
         _playerInstance = libvlc_media_player_new([_privateLibrary instance],
                                                   &cbs, (__bridge void *)_eventsHandler);
