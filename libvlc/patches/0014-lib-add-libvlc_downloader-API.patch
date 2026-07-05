@@ -1,14 +1,14 @@
-From c5e7cbfaf8d5115e11d7d3a2a130736d05e11f58 Mon Sep 17 00:00:00 2001
+From 38fcbc594580660a9edd1da77623c589414feb23 Mon Sep 17 00:00:00 2001
 From: Ayush Dey <deyayush6@gmail.com>
 Date: Mon, 11 Aug 2025 11:42:39 +0530
-Subject: [PATCH 14/17] lib: add libvlc_downloader API
+Subject: [PATCH 14/20] lib: add libvlc_downloader API
 
 Used to download a file readable by VLC over a limited
 set of protocols: http(s), ftp, file, nfs, smb, sftp
 
 Refs #27971
 ---
- NEWS                            |   5 +
+ NEWS                            |   2 +
  include/meson.build             |   1 +
  include/vlc/libvlc_downloader.h | 362 ++++++++++++++++++++
  include/vlc/vlc.h               |   1 +
@@ -16,28 +16,25 @@ Refs #27971
  lib/downloader.c                | 564 ++++++++++++++++++++++++++++++++
  lib/libvlc.sym                  |   7 +
  lib/meson.build                 |   1 +
- 8 files changed, 943 insertions(+)
+ 8 files changed, 940 insertions(+)
  create mode 100644 include/vlc/libvlc_downloader.h
  create mode 100644 lib/downloader.c
 
 diff --git a/NEWS b/NEWS
-index aa0c2dd4b3..53b30312e4 100644
+index d01caed7c1..c62b1d0328 100644
 --- a/NEWS
 +++ b/NEWS
-@@ -121,6 +121,11 @@ macOS:
- 
- appleOS:
-  * Improved proxy configuration handling
-+
-+libVLC:
-+ * Add libvlc_downloader API that provides a bitstream of media to client applications
-+
-+
- Changes between 3.0.12.1 and 3.0.13:
- ----------------------------------
- 
+@@ -346,6 +346,8 @@ LibVLC:
+  * Add libvlc_picture and libvlc_picture_list APIs, including RGBA and WebP
+    support
+  * Rework media parsing and thumbnailing around the new libvlc_parser API
++ * Add libvlc_downloader API that provides a bitstream of media to client
++   applications
+  * Add media track list APIs, refcounted media tracks, multiple track
+    selection and selected-track reporting
+  * Add media-player timer/watch APIs, record API, program API, next-media API,
 diff --git a/include/meson.build b/include/meson.build
-index 5b245e0f7c..bd38fffa87 100644
+index 9e9d4d5165..e022df2f75 100644
 --- a/include/meson.build
 +++ b/include/meson.build
 @@ -3,6 +3,7 @@ install_headers(
@@ -1019,7 +1016,7 @@ index 0000000000..6431fad856
 +    DownloaderTaskDestroy(task);
 +}
 diff --git a/lib/libvlc.sym b/lib/libvlc.sym
-index 3d3df41d25..bfdc35da04 100644
+index b6d66e2881..7b702ca6a7 100644
 --- a/lib/libvlc.sym
 +++ b/lib/libvlc.sym
 @@ -119,6 +119,13 @@ libvlc_parser_queue_thumbnailing

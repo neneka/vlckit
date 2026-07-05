@@ -1,0 +1,35 @@
+From cb7fab51b97a8e7ecb31a97bbff146b738107667 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
+Date: Sun, 5 Jul 2026 12:04:15 +0200
+Subject: [PATCH 19/20] vout/sample buffer display: add missing sanity checks
+
+---
+ modules/video_output/apple/VLCSampleBufferDisplay.m | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/modules/video_output/apple/VLCSampleBufferDisplay.m b/modules/video_output/apple/VLCSampleBufferDisplay.m
+index 2eb2df33ce..04636ade1b 100644
+--- a/modules/video_output/apple/VLCSampleBufferDisplay.m
++++ b/modules/video_output/apple/VLCSampleBufferDisplay.m
+@@ -732,6 +732,9 @@ - (void)prepareDisplay {
+             return;
+     }
+ 
++    if (_vd->place == NULL)
++        return;
++
+     VLCSampleBufferDisplay *sys = self;
+     vout_display_place_t place = *_vd->place;
+     dispatch_async(dispatch_get_main_queue(), ^{
+@@ -741,6 +744,8 @@ - (void)prepareDisplay {
+         VLCSampleBufferDisplayView *displayView;
+         VLCSampleBufferSubpictureView *spuView;
+         VLCView *window = sys.window;
++        if (window == nil)
++            return;
+ 
+         displayView = [[VLCSampleBufferDisplayView alloc] init];
+         spuView = [VLCSampleBufferSubpictureView new];
+-- 
+2.50.1 (Apple Git-155)
+

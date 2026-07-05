@@ -1,6 +1,6 @@
 #!/bin/sh
 # Copyright (C) Pierre d'Herbemont, 2010
-# Copyright (C) Felix Paul Kühne, 2012-2025
+# Copyright (C) Felix Paul Kühne, 2012-2026
 
 set -e
 
@@ -30,7 +30,7 @@ if [ -z "$MAKEFLAGS" ]; then
     MAKEFLAGS="-j$(sysctl -n machdep.cpu.core_count || nproc)";
 fi
 
-TESTEDHASH="c9b0b564b" # libvlc hash that this version of VLCKit is build on
+TESTEDHASH="fe6e76a90" # libvlc hash that this version of VLCKit is build on
 
 usage()
 {

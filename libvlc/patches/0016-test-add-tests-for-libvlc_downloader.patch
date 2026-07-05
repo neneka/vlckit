@@ -1,7 +1,7 @@
-From 85a937c78503256396a49efa3fa17c58cc4bfbe6 Mon Sep 17 00:00:00 2001
+From d6efb9affdfe431465ae5074db15e51b3ed8138d Mon Sep 17 00:00:00 2001
 From: Ayush Dey <deyayush6@gmail.com>
 Date: Mon, 1 Sep 2025 13:30:05 +0530
-Subject: [PATCH 16/17] test: add tests for libvlc_downloader
+Subject: [PATCH 16/20] test: add tests for libvlc_downloader
 
 ---
  test/Makefile.am         |   3 +
@@ -10,7 +10,7 @@ Subject: [PATCH 16/17] test: add tests for libvlc_downloader
  create mode 100644 test/libvlc/downloader.c
 
 diff --git a/test/Makefile.am b/test/Makefile.am
-index 5a6e885f98..ec613a9a45 100644
+index 349d0b8693..dff27cd2ab 100644
 --- a/test/Makefile.am
 +++ b/test/Makefile.am
 @@ -32,6 +32,7 @@ player_programs = \

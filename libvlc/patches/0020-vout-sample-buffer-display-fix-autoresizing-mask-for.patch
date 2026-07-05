@@ -1,0 +1,27 @@
+From 0aa763796215c386b70c5b017f07e542d95291a8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
+Date: Sun, 5 Jul 2026 12:05:45 +0200
+Subject: [PATCH 20/20] vout/sample buffer display: fix autoresizing mask for
+ the video image layer
+
+Resizing is done according to core request and not by UIKit
+---
+ modules/video_output/apple/VLCSampleBufferDisplay.m | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/modules/video_output/apple/VLCSampleBufferDisplay.m b/modules/video_output/apple/VLCSampleBufferDisplay.m
+index 04636ade1b..3000ec454d 100644
+--- a/modules/video_output/apple/VLCSampleBufferDisplay.m
++++ b/modules/video_output/apple/VLCSampleBufferDisplay.m
+@@ -576,7 +576,7 @@ - (instancetype)init {
+     self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+     self.wantsLayer = YES;
+ #else
+-    self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
++    self.autoresizingMask = UIViewAutoresizingNone;
+ #endif
+     return self;
+ }
+-- 
+2.50.1 (Apple Git-155)
+

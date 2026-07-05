@@ -1,7 +1,7 @@
-From ec388f3d702f0efb52bcc5e6ce888d6bd9d0a273 Mon Sep 17 00:00:00 2001
+From 1b95fe497d439678ed6f1890b181a2b005addcba Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
 Date: Fri, 26 Jun 2026 20:30:48 +0200
-Subject: [PATCH] anyAppleOS: pin CC below C23 to keep libtool ObjC tag
+Subject: [PATCH 18/20] anyAppleOS: pin CC below C23 to keep libtool ObjC tag
  inference working
 
 autoconf 2.73 adds -std=gnu23 to CC but not OBJC, so libtool can no

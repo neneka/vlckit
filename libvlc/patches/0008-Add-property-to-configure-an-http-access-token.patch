@@ -1,7 +1,7 @@
-From 252917e4ef0db5259fc2452a93df28d7b15062dc Mon Sep 17 00:00:00 2001
+From fc883178439933585444532efa5c734fc7c1e267 Mon Sep 17 00:00:00 2001
 From: Alex Pilgrim <pilgrim.sa@gmail.com>
 Date: Fri, 21 Feb 2020 12:34:07 +0200
-Subject: [PATCH 08/17] Add property to configure an http access token
+Subject: [PATCH 08/20] Add property to configure an http access token
 
 ---
  modules/access/http/access.c                   | 8 ++++++--

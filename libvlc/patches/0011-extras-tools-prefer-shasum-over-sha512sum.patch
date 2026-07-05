@@ -1,7 +1,7 @@
-From 7a6f6f4826b0b759531c0f2433365e0a2244902d Mon Sep 17 00:00:00 2001
+From 540d68f325655f47f20fbd50a2c30c3ebc8b2476 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
 Date: Tue, 5 Nov 2024 11:38:17 +0100
-Subject: [PATCH 11/17] extras/tools: prefer shasum over sha512sum
+Subject: [PATCH 11/20] extras/tools: prefer shasum over sha512sum
 
 This fixes the operation on macOS 15 which is shipping an incompatible
 variant of that tool.
