@@ -45,12 +45,10 @@ NS_ASSUME_NONNULL_BEGIN
  * \note you may pipe multiple values for the single parameter
  */
 typedef NS_OPTIONS(int, VLCMediaParsingOptions) {
-    VLCMediaParseLocal          = 0x01,     ///< Parse media if it's a local file
-    VLCMediaParseNetwork        = 0x02,     ///< Parse media even if it's a network file
-    VLCMediaParseForced         = 0x04,     ///< Force parsing the media even if it would be skipped
-    VLCMediaFetchLocal          = 0x08,     ///< Fetch meta and cover art using local resources
-    VLCMediaFetchNetwork        = 0x10,     ///< Fetch meta and cover art using network resources
-    VLCMediaDoInteract          = 0x20,     ///< Interact with the user when preparsing this item (and not its sub items). Set this flag in order to receive a callback when the input is asking for credentials.
+    VLCMediaParse               = 0x01,     ///< Parse the media
+    VLCMediaFetchLocal          = 0x02,     ///< Fetch meta and cover art using local resources
+    VLCMediaFetchNetwork        = 0x04,     ///< Fetch meta and cover art using network resources
+    VLCMediaDoInteract          = 0x08,     ///< Interact with the user when preparsing this item (and not its sub items). Set this flag in order to receive a callback when the input is asking for credentials.
 };
 
 /**
