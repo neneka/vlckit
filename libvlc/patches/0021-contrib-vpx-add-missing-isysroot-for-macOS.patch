@@ -1,0 +1,27 @@
+From 1d1c838fc472333238fe5ebfd117ba41ecac168d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
+Date: Mon, 6 Jul 2026 09:57:57 +0200
+Subject: [PATCH 21/21] contrib/vpx: add missing isysroot for macOS
+
+This matches our iOS code and fixes c++ linking
+---
+ contrib/src/vpx/rules.mak | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/contrib/src/vpx/rules.mak b/contrib/src/vpx/rules.mak
+index 57cde49c04..b89ef12a0e 100644
+--- a/contrib/src/vpx/rules.mak
++++ b/contrib/src/vpx/rules.mak
+@@ -144,6 +144,9 @@ ifeq ($(ARCH),aarch64)
+ VPX_LDFLAGS += -arch arm64
+ endif
+ endif
++ifdef HAVE_MACOSX
++VPX_LDFLAGS += -isysroot $(MACOSX_SDK)
++endif
+ ifdef HAVE_DARWIN_OS
+ ifeq ($(ARCH),$(filter $(ARCH), arm aarch64))
+ ifneq ($(call clang_at_least, 13), true)
+-- 
+2.50.1 (Apple Git-155)
+

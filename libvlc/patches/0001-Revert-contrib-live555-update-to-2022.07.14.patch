@@ -1,7 +1,7 @@
 From 6bc48fb6fa5b555c2e5f3e551334260b8e20840f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
 Date: Thu, 11 Aug 2022 11:59:13 +0200
-Subject: [PATCH 01/20] Revert "contrib: live555: update to 2022.07.14"
+Subject: [PATCH 01/21] Revert "contrib: live555: update to 2022.07.14"
 
 This reverts commit 78998cab182bbdbd1915deeead1ad4bc945b514e.
 ---
