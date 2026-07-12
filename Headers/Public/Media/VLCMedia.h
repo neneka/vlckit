@@ -519,6 +519,11 @@ NS_SWIFT_NAME(VLCMedia.AudioTrack)
  */
 @property(nonatomic, readonly) unsigned rate;
 
+/**
+ * Whether the audio track is currently carrying dual-mono audio.
+ */
+@property(nonatomic, readonly, getter=isDualMono) BOOL dualMono;
+
 
 + (instancetype)new NS_UNAVAILABLE;
 - (instancetype)init NS_UNAVAILABLE;
