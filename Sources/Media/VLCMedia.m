@@ -833,12 +833,13 @@ static const struct event_handler_entry {
         return nil;
     _channelsNumber = audio->i_channels;
     _rate = audio->i_rate;
+    _dualMono = audio->b_dual_mono;
     return self;
 }
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<%@ %p>, channelsNumber: %d, rate: %d", [self class], self, _channelsNumber, _rate];
+    return [NSString stringWithFormat:@"<%@ %p>, channelsNumber: %d, rate: %d, dualMono: %@", [self class], self, _channelsNumber, _rate, _dualMono ? @"YES" : @"NO"];
 }
 
 @end
