@@ -126,8 +126,9 @@
     if (self = [super init]) {
         _mediaPlayer = mediaPlayer;
         _name = chapter_description->psz_name ? @(chapter_description->psz_name) : nil;
-        _timeOffset = [VLCTime timeWithNumber: @(chapter_description->i_time_offset)];
-        _durationTime = [VLCTime timeWithNumber: @(chapter_description->i_duration)];
+        // chapter time-offset and duration are in microseconds; VLCTime is in milliseconds
+        _timeOffset = [VLCTime timeWithNumber: @(chapter_description->i_time_offset / 1000)];
+        _durationTime = [VLCTime timeWithNumber: @(chapter_description->i_duration / 1000)];
         _chapterIndex = chapterIndex;
         _titleIndex = titleIndex;
         _mediaURL = mediaPlayer.media.url;
@@ -248,7 +249,8 @@
     if (self = [super init]) {
         _mediaPlayer = mediaPlayer;
         _name = title_description->psz_name ? @(title_description->psz_name) : nil;
-        _durationTime = [VLCTime timeWithNumber: @(title_description->i_duration)];
+        // title duration is in microseconds; VLCTime is in milliseconds
+        _durationTime = [VLCTime timeWithNumber: @(title_description->i_duration / 1000)];
         _titleType = (VLCMediaPlayerTitleType)title_description->i_flags;
         _titleIndex = titleIndex;
         _mediaURL = mediaPlayer.media.url;
@@ -284,6 +286,68 @@
         return;
     
     libvlc_media_player_navigate(p_mi, navigate_mode);
+}
+
+@end
+
+
+#pragma mark - VLCProgramDescription
+
+@implementation VLCProgramDescription
+{
+    __weak VLCMediaPlayer *_mediaPlayer;
+}
+
+- (void)setCurrent
+{
+    libvlc_media_player_t *p_mi = _mediaPlayer.libVLCMediaPlayer;
+    if (!p_mi)
+        return;
+
+    libvlc_media_player_select_program_id(p_mi, _groupID);
+}
+
+- (BOOL)isEqual:(id)other
+{
+    if (other == self)
+        return YES;
+    else if (![other isKindOfClass: self.class])
+        return NO;
+
+    VLCProgramDescription *otherProgram = (VLCProgramDescription *)other;
+    return otherProgram.groupID == _groupID &&
+            otherProgram.selected == _selected &&
+            otherProgram.scrambled == _scrambled &&
+            ((otherProgram.name == nil && _name == nil) || [otherProgram.name isEqualToString: _name]);
+}
+
+- (NSUInteger)hash
+{
+    return self.description.hash;
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat: @"<%@ %p>, groupID: %d, name: %@, selected: %@, scrambled: %@", self.class, self, _groupID, _name, _selected ? @"YES" : @"NO", _scrambled ? @"YES" : @"NO"];
+}
+
+@end
+
+/**
+ * VLCProgramDescription (LibVLCBridging)
+ */
+@implementation VLCProgramDescription (LibVLCBridging)
+
+- (instancetype)initWithMediaPlayer:(VLCMediaPlayer *)mediaPlayer program:(libvlc_player_program_t *)program
+{
+    if (self = [super init]) {
+        _mediaPlayer = mediaPlayer;
+        _groupID = program->i_group_id;
+        _name = program->psz_name ? @(program->psz_name) : nil;
+        _selected = program->b_selected;
+        _scrambled = program->b_scrambled;
+    }
+    return self;
 }
 
 @end

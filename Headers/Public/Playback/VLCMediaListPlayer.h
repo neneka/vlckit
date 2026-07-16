@@ -2,7 +2,7 @@
  * VLCMediaListPlayer.h: VLCKit.framework VLCMediaListPlayer implementation
  *****************************************************************************
  * Copyright (C) 2009 Pierre d'Herbemont
- * Partial Copyright (C) 2009-2013 Felix Paul Kühne
+ * Partial Copyright (C) 2009-2024 Felix Paul Kühne
  * Copyright (C) 2009-2019 VLC authors and VideoLAN
 
  * $Id$
@@ -26,6 +26,8 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
+#import "VLCMediaPlayer.h"
+
 @class VLCMedia, VLCMediaPlayer, VLCMediaList, VLCMediaListPlayer;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -42,11 +44,6 @@ typedef NS_ENUM(NSInteger, VLCRepeatMode) {
 
 @protocol VLCMediaListPlayerDelegate <NSObject>
 @optional
-/**
- * Sent when VLCMediaListPlayer has finished playing.
- */
-- (void)mediaListPlayerFinishedPlayback:(VLCMediaListPlayer *)player;
-
 /**
  * Sent when VLCMediaListPlayer going to play next media
  */
@@ -141,6 +138,16 @@ OBJC_VISIBLE
  * See VLCRepeatMode.
  */
 @property (readwrite) VLCRepeatMode repeatMode;
+
+/**
+ * whether the list player is currently playing
+ */
+@property (nonatomic, readonly, getter=isPlaying) BOOL playing;
+
+/**
+ * the current playback state of the list player
+ */
+@property (nonatomic, readonly) VLCMediaPlayerState state;
 
 /**
  * media must be in the current media list.

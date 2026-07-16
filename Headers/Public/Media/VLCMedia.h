@@ -27,7 +27,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class VLCTime, VLCMediaTrack, VLCMediaMetaData;
+@class VLCTime, VLCMediaTrack, VLCMediaMetaData, VLCMediaSlave;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
  * Available notification messages.
  */
 FOUNDATION_EXPORT NSNotificationName const VLCMediaMetaChangedNotification NS_SWIFT_NAME(VLCMedia.metaChangedNotification); ///< Notification message for when the media's meta data has changed
+FOUNDATION_EXPORT NSNotificationName const VLCMediaSubitemsChangedNotification NS_SWIFT_NAME(VLCMedia.subitemsChangedNotification); ///< Notification message for when the media's subitems have changed
+FOUNDATION_EXPORT NSNotificationName const VLCMediaArtworkChangedNotification NS_SWIFT_NAME(VLCMedia.artworkChangedNotification); ///< Notification message for when the media's embedded artwork became available
 
 // Forward declarations, supresses compiler error messages
 @class VLCLibrary;
@@ -61,8 +63,21 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaMetaChangedNotification NS_SW
  * Delegate method called whenever the media was parsed.
  * \param aMedia The media resource whose meta data has been changed.
  */
-
 - (void)mediaDidFinishParsing:(VLCMedia *)aMedia;
+
+/**
+ * Delegate method called whenever the media gained new subitems.
+ * \param aMedia The media resource whose subitems have changed.
+ */
+- (void)mediaDidChangeSubitems:(VLCMedia *)aMedia;
+
+/**
+ * Delegate method called whenever embedded artwork became available on the media.
+ * \note The artwork can be retrieved through the media's metaData.
+ * \param aMedia The media resource whose artwork became available.
+ */
+- (void)mediaDidChangeArtwork:(VLCMedia *)aMedia;
+
 @end
 
 /**
@@ -215,27 +230,16 @@ typedef NS_ENUM(NSUInteger, VLCMediaType) {
 
 /**
  * A VLCTime object describing the length of the media resource, only if it is
- * available.  Use lengthWaitUntilDate: to wait for a specified length of time.
- * \see lengthWaitUntilDate
+ * available.
  */
 @property (nonatomic, readwrite, strong) VLCTime * length;
-
-/**
- * Returns a VLCTime object describing the length of the media resource,
- * however, this is a blocking operation and will wait until the preparsing is
- * completed before returning anything.
- * \param aDate Time for operation to wait until, if there are no results
- * before specified date then nil is returned.
- * \return The length of the media resource, nil if it couldn't wait for it.
- */
-- (VLCTime *)lengthWaitUntilDate:(NSDate *)aDate;
 
 /**
  * list of possible parsed states returnable by parsedStatus
  */
 typedef NS_ENUM(unsigned, VLCMediaParsedStatus)
 {
-    VLCMediaParsedStatusInit = 0,
+    VLCMediaParsedStatusNone = 0,
     VLCMediaParsedStatusPending,
     VLCMediaParsedStatusSkipped,
     VLCMediaParsedStatusFailed,
@@ -243,6 +247,7 @@ typedef NS_ENUM(unsigned, VLCMediaParsedStatus)
     VLCMediaParsedStatusCancelled,
     VLCMediaParsedStatusDone
 };
+
 /**
  * \return Returns the parse status of the media
  */
@@ -267,11 +272,6 @@ typedef NS_ENUM(unsigned, VLCMediaParsedStatus)
  * Returns the tracks information.
  */
 @property (NS_NONATOMIC_IOSONLY, readonly, copy) NSArray<VLCMediaTrack *> *tracksInformation;
-
-/**
- * userData is specialized data accessed by the host application.
- */
-@property (nonatomic, nullable) id userData;
 
 /**
  * list of possible libvlc_media_filestat type.
@@ -302,81 +302,6 @@ typedef NS_ENUM(int, VLCMediaFileStatReturnType) {
 - (VLCMediaFileStatReturnType)fileStatValueForType:(const VLCMediaFileStatType)type value:(uint64_t *)value;
 
 /**
- * enum of available options for use with parseWithOptions
- * \note you may pipe multiple values for the single parameter
- */
-typedef NS_OPTIONS(int, VLCMediaParsingOptions) {
-    VLCMediaParseLocal          = 0x01,     ///< Parse media if it's a local file
-    VLCMediaParseNetwork        = 0x02,     ///< Parse media even if it's a network file
-    VLCMediaParseForced         = 0x04,     ///< Force parsing the media even if it would be skipped
-    VLCMediaFetchLocal          = 0x08,     ///< Fetch meta and cover art using local resources
-    VLCMediaFetchNetwork        = 0x10,     ///< Fetch meta and cover art using network resources
-    VLCMediaDoInteract          = 0x20,     ///< Interact with the user when preparsing this item (and not its sub items). Set this flag in order to receive a callback when the input is asking for credentials.
-};
-
-/**
- * Triggers an asynchronous parse of the media item using the given options.
- *
- * This will execute \p VLCMedia::parseWithOptions:timeout:library: with the
- * default VLCLibrary and the default timeout from this VLCLibrary.
- *
- * \param options the option mask based on VLCMediaParsingOptions
- * \return 0 on success, -1 in case of error
- *
- * \note Listen to the "parsed" key value or the mediaDidFinishParsing: delegate
- * method to be notified about parsing results. Those triggers will _NOT_ be
- * raised if parsing fails and this method returns an error.
- *
- * \see VLCMediaParsingOptions
- */
-- (int)parseWithOptions:(VLCMediaParsingOptions)options;
-
-/**
- * Triggers an asynchronous parse of the media item using the given options.
- *
- * This will execute \p VLCMedia::parseWithOptions:timeout:library: with the
- * default VLCLibrary.
- *
- * \param options the option mask based on VLCMediaParsingOptions
- * \param timeoutValue a time-out value in milliseconds (-1 for default, 0 for infinite)
- * \return 0 on success, -1 in case of error
- *
- * \note Listen to the "parsed" key value or the mediaDidFinishParsing: delegate
- * method to be notified about parsing results. Those triggers will _NOT_ be
- * raised if parsing fails and this method returns an error.
- *
- * \see VLCMediaParsingOptions
- */
-- (int)parseWithOptions:(VLCMediaParsingOptions)options timeout:(int)timeoutValue;
-
-/**
- * Triggers an asynchronous parse of the media item using the given options.
- *
- * The VLCLibrary \p library given in argument will be used to launch the
- * preparsing request, and releasing this VLCLibrary will cancel it.
- *
- * \param options the option mask based on VLCMediaParsingOptions
- * \param timeoutValue a time-out value in milliseconds (-1 for default, 0 for infinite)
- * \return 0 on success, -1 in case of error
- *
- * \note Listen to the "parsed" key value or the mediaDidFinishParsing:
- * delegate method to be notified about parsing results. Those triggers
- * will _NOT_ be raised if parsing fails and this method returns an error.
- *
- * \see VLCMediaParsingOptions
- */
-
-- (int)parseWithOptions:(VLCMediaParsingOptions)options timeout:(int)timeoutValue library:(VLCLibrary*)library;
-
-/**
- * Stop the parsing of the media
- *
- * When the media parsing is stopped, the mediaDidFinishParsing will
- * be sent with the VLCMediaParsedStatusTimeout status.
-*/
-- (void)parseStop;
-
-/**
  * Add options to the media, that will be used to determine how
  * VLCMediaPlayer will read the media. This allow to use VLC advanced
  * reading/streaming options in a per-media basis
@@ -403,6 +328,39 @@ typedef NS_OPTIONS(int, VLCMediaParsingOptions) {
  * Remove all custom HTTP request headers.
  */
 - (void)removeAllHTTPHeaders;
+
+/**
+ * flags controlling how a media option is interpreted, matching libvlc_media_option_t
+ */
+typedef NS_OPTIONS(unsigned, VLCMediaOption) {
+    VLCMediaOptionTrusted = 0x2,
+    VLCMediaOptionUnique  = 0x100
+} NS_SWIFT_NAME(VLCMedia.Option);
+
+/**
+ * Add an option to the media with the given flags.
+ * \param option the option as a string
+ * \param flags the flags for this option
+ */
+- (void)addOption:(NSString *)option withFlags:(VLCMediaOption)flags;
+
+/**
+ * the external slaves (subtitle or audio) of the media, parsed by VLC or added via -addSlave:
+ */
+@property (nonatomic, readonly, copy) NSArray<VLCMediaSlave *> *slaves;
+
+/**
+ * Add an external slave (e.g. a subtitle or additional audio track) to the media.
+ * \note must be called before the media is parsed or played
+ * \param slave the slave to add
+ * \return YES on success
+ */
+- (BOOL)addSlave:(VLCMediaSlave *)slave;
+
+/**
+ * Remove all slaves previously added with -addSlave: or parsed by VLC.
+ */
+- (void)clearSlaves;
 
 /**
  * Parse a value of an incoming Set-Cookie header (see RFC 6265) and append the
@@ -438,23 +396,24 @@ typedef NS_OPTIONS(int, VLCMediaParsingOptions) {
 struct VLCMediaStats
 {
     /* Input */
-    const int         readBytes;
-    const float       inputBitrate;
+    const uint64_t         readBytes;
+    const float            inputBitrate;
     /* Demux */
-    const int         demuxReadBytes;
-    const float       demuxBitrate;
-    const int         demuxCorrupted;
-    const int         demuxDiscontinuity;
+    const uint64_t         demuxReadBytes;
+    const float            demuxBitrate;
+    const uint64_t         demuxCorrupted;
+    const uint64_t         demuxDiscontinuity;
     /* Decoders */
-    const int         decodedVideo;
-    const int         decodedAudio;
+    const uint64_t         decodedVideo;
+    const uint64_t         decodedAudio;
     /* Video Output */
-    const int         displayedPictures;
-    const int         latePictures;
-    const int         lostPictures;
+    const uint64_t         displayedPictures;
+    const uint64_t         latePictures;
+    const uint64_t         lostPictures;
     /* Audio output */
-    const int         playedAudioBuffers;
-    const int         lostAudioBuffers;
+    const uint64_t         playedAudioBuffers;
+    const uint64_t         lostAudioBuffers;
+
 } NS_SWIFT_NAME(VLCMedia.Stats);
 typedef struct VLCMediaStats VLCMediaStats;
 

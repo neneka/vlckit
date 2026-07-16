@@ -27,12 +27,15 @@
 #import <VLCKit/VLCAudio.h>
 #import <VLCKit/VLCLibrary.h>
 #import <VLCKit/VLCMedia.h>
+#import <VLCKit/VLCMediaSlave.h>
 #import <VLCKit/VLCMediaDiscoverer.h>
 #import <VLCKit/VLCMediaList.h>
 #import <VLCKit/VLCMediaPlayer.h>
 #import <VLCKit/VLCAudioEqualizer.h>
 #import <VLCKit/VLCMediaListPlayer.h>
 #import <VLCKit/VLCMediaThumbnailer.h>
+#import <VLCKit/VLCMediaParser.h>
+#import <VLCKit/VLCMediaDownloader.h>
 #import <VLCKit/VLCMediaMetaData.h>
 #import <VLCKit/VLCTime.h>
 #import <VLCKit/VLCFilter.h>
@@ -68,6 +71,7 @@
 @class VLCTime;
 @class VLCAudio;
 @class VLCMediaThumbnailer;
+@class VLCMediaParser;
 @class VLCMediaListPlayer;
 @class VLCMediaPlayer;
 @class VLCAudioEqualizer;

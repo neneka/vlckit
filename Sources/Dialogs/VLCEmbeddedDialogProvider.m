@@ -23,7 +23,6 @@
 
 #import <VLCEmbeddedDialogProvider.h>
 #import <VLCLibrary.h>
-#import <VLCiOSLegacyDialogProvider.h>
 #import <VLCEmbeddedDialogProvider.h>
 
 @interface VLCEmbeddedDialogProvider ()
@@ -164,11 +163,12 @@ static void updateProgressCallback(void *p_data,
 
         /* callback setup */
         const libvlc_dialog_cbs cbs = {
-            displayLoginCallback,
-            displayQuestionCallback,
-            displayProgressCallback,
-            cancelCallback,
-            updateProgressCallback
+            .version = 0,
+            .pf_display_login = displayLoginCallback,
+            .pf_display_question = displayQuestionCallback,
+            .pf_display_progress = displayProgressCallback,
+            .pf_cancel = cancelCallback,
+            .pf_update_progress = updateProgressCallback,
         };
 
         libvlc_dialog_set_callbacks(_libraryInstance.instance,

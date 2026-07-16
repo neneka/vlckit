@@ -29,6 +29,7 @@
 #import <VLCMediaPlayer.h>
 #import <VLCMediaList.h>
 #import <VLCMedia.h>
+#import <VLCMediaSlave.h>
 #import <VLCAudio.h>
 #import <VLCMediaMetaData.h>
 #import <VLCAudioEqualizer.h>
@@ -91,7 +92,7 @@ NS_ASSUME_NONNULL_BEGIN
  * Returns the receiver's internal media descriptor pointer.
  * \return The receiver's internal media descriptor pointer.
  */
-@property (readonly) void * libVLCMediaDescriptor;
+@property (readonly) libvlc_media_t * libVLCMediaDescriptor;
 @end
 
 /**
@@ -113,6 +114,25 @@ NS_ASSUME_NONNULL_BEGIN
  * \param value the length value
  */
 - (void)setLength:(VLCTime *)value;
+
+/**
+ * Called by the media player when libvlc reports that the media's metadata has
+ * been updated. Invalidates the cached metadata and notifies observers.
+ */
+- (void)metaChanged;
+
+/**
+ * Called by the media player when libvlc reports that the media gained new
+ * subitems. Refreshes the subitems list.
+ */
+- (void)subitemsChanged;
+
+/**
+ * Called by the media player when libvlc reports a new embedded artwork
+ * attachment. Stores it on the metadata and notifies observers.
+ * \param imageData the encoded image data of the attachment
+ */
+- (void)artworkAttachmentReceived:(NSData *)imageData;
 @end
 
 /**
@@ -234,6 +254,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)handleMediaMetaChanged:(const libvlc_meta_t)type;
 
+/**
+ * Decodes and caches the embedded artwork delivered as an attachment.
+ * \param imageData the encoded image data
+ * \return YES if the data could be decoded into an image, NO otherwise
+ */
+- (BOOL)setArtworkWithData:(NSData *)imageData;
+
 @end
 
 /**
@@ -273,6 +300,24 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithMediaPlayer:(VLCMediaPlayer *)mediaPlayer titleDescription:(libvlc_title_description_t *)title_description titleIndex:(const int)titleIndex;
 
 - (void)navigate:(const libvlc_navigate_mode_t)navigate_mode;
+
+@end
+
+/**
+ * Bridges functionality between libvlc and VLCProgramDescription implementation.
+ */
+@interface VLCProgramDescription (LibVLCBridging)
+
+- (instancetype)initWithMediaPlayer:(VLCMediaPlayer *)mediaPlayer program:(libvlc_player_program_t *)program;
+
+@end
+
+/**
+ * Bridges functionality between libvlc and VLCMediaSlave implementation.
+ */
+@interface VLCMediaSlave (LibVLCBridging)
+
++ (nullable instancetype)mediaSlaveWithLibVLCSlave:(const libvlc_media_slave_t *)slave;
 
 @end
 

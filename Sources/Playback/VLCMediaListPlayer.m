@@ -2,7 +2,7 @@
  * VLCMediaListPlayer.m: VLCKit.framework VLCMediaListPlayer implementation
  *****************************************************************************
  * Copyright (C) 2009 Pierre d'Herbemont
- * Partial Copyright (C) 2009-2017 Felix Paul Kühne
+ * Partial Copyright (C) 2009-2024 Felix Paul Kühne
  * Copyright (C) 2009-2019 VLC authors and VideoLAN
  * $Id$
  *
@@ -28,6 +28,7 @@
 #import <VLCMediaListPlayer.h>
 #import <VLCMedia.h>
 #import <VLCMediaPlayer.h>
+#import <VLCMediaPlayer+Internal.h>
 #import <VLCMediaList.h>
 #import <VLCLibVLCBridging.h>
 #import <VLCLibrary.h>
@@ -40,44 +41,67 @@
     VLCMediaList *_mediaList;
     VLCRepeatMode _repeatMode;
     dispatch_queue_t _libVLCBackgroundQueue;
-    VLCEventsHandler* _eventsHandler;
+    VLCEventsHandler *_eventsHandler;
 }
-- (void)mediaListPlayerPlayed;
 - (void)mediaListPlayerNextItemSet:(VLCMedia *)media;
 - (void)mediaListPlayerStopped;
 @end
 
-static void HandleMediaListPlayerPlayed(const libvlc_event_t * event, void * opaque)
+static void HandleMediaChanged(void *opaque, libvlc_media_t *md)
 {
     @autoreleasepool {
-        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler*)opaque;
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
         [eventsHandler handleEvent:^(id _Nonnull object) {
-            VLCMediaListPlayer *mediaListPlayer = (VLCMediaListPlayer *)object;
-            [mediaListPlayer mediaListPlayerPlayed];
-        }];
-    }
-}
-
-static void HandleMediaListPlayerNextItemSet(const libvlc_event_t * event, void * opaque)
-{
-    @autoreleasepool {
-        VLCMedia *media = [[VLCMedia alloc]
-                           initWithLibVLCMediaDescriptor:event->u.media_list_player_next_item_set.item];
-        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler*)opaque;
-        [eventsHandler handleEvent:^(id _Nonnull object) {
+            VLCMedia *media = [[VLCMedia alloc] initWithLibVLCMediaDescriptor:md];
             VLCMediaListPlayer *mediaListPlayer = (VLCMediaListPlayer *)object;
             [mediaListPlayer mediaListPlayerNextItemSet: media];
         }];
     }
 }
 
-static void HandleMediaListPlayerStopped(const libvlc_event_t * event, void * opaque)
+static void HandleStateChanged(void *opaque, libvlc_state_t state)
 {
+    VLCMediaPlayerState newState;
+
+    switch (state) {
+        case libvlc_Playing:
+            newState = VLCMediaPlayerStatePlaying;
+            break;
+        case libvlc_Paused:
+            newState = VLCMediaPlayerStatePaused;
+            break;
+        case libvlc_Stopping:
+            newState = VLCMediaPlayerStateStopping;
+            break;
+        case libvlc_Stopped:
+            newState = VLCMediaPlayerStateStopped;
+            break;
+        case libvlc_Error:
+            newState = VLCMediaPlayerStateError;
+            break;
+        case libvlc_Opening:
+            newState = VLCMediaPlayerStateOpening;
+            break;
+
+        default:
+            VKLog(@"%s: Unknown event", __FUNCTION__);
+            return;
+    }
+
     @autoreleasepool {
-        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler*)opaque;
+        VLCEventsHandler *eventsHandler = (__bridge VLCEventsHandler *)opaque;
         [eventsHandler handleEvent:^(id _Nonnull object) {
             VLCMediaListPlayer *mediaListPlayer = (VLCMediaListPlayer *)object;
-            [mediaListPlayer mediaListPlayerStopped];
+            VLCMediaPlayer *mediaPlayer = mediaListPlayer.mediaPlayer;
+
+            [mediaPlayer mediaPlayerStateChanged:newState];
+            NSNotification *notification = [NSNotification notificationWithName:VLCMediaPlayerStateChangedNotification object:mediaPlayer];
+            [[NSNotificationCenter defaultCenter] postNotification:notification];
+            if ([mediaPlayer.delegate respondsToSelector:@selector(mediaPlayerStateChanged:)])
+                [mediaPlayer.delegate mediaPlayerStateChanged:newState];
+
+            if (state == libvlc_Stopped)
+                [mediaListPlayer mediaListPlayerStopped];
         }];
     }
 }
@@ -95,50 +119,22 @@ static void HandleMediaListPlayerStopped(const libvlc_event_t * event, void * op
         } else
             library = [VLCLibrary sharedLibrary];
 
-        instance = libvlc_media_list_player_new([library instance]);
+        _eventsHandler = [VLCEventsHandler handlerWithObject:self configuration:[VLCLibrary sharedEventsConfiguration]];
+
+        static const struct libvlc_media_player_cbs cbs = {
+            .version = 0,
+            .on_media_changed = HandleMediaChanged,
+            .on_state_changed = HandleStateChanged,
+        };
+
+        instance = libvlc_media_list_player_new([library instance],
+                                                &cbs, (__bridge void *)_eventsHandler);
 
         _mediaPlayer = [[VLCMediaPlayer alloc] initWithLibVLCInstance:libvlc_media_list_player_get_media_player(instance) andLibrary:library];
         if (drawable != nil)
             [_mediaPlayer setDrawable:drawable];
-
-        [self registerObservers];
     }
     return self;
-}
-
-- (void)registerObservers
-{
-    __block libvlc_event_manager_t * p_em = libvlc_media_list_player_event_manager(instance);
-
-    if (!p_em) {
-        return;
-    }
-    
-    _eventsHandler = [VLCEventsHandler handlerWithObject:self configuration:[VLCLibrary sharedEventsConfiguration]];
-    dispatch_sync(_libVLCBackgroundQueue,^{
-        libvlc_event_attach(p_em, libvlc_MediaListPlayerPlayed,
-                            HandleMediaListPlayerPlayed, (__bridge void *)(_eventsHandler));
-        libvlc_event_attach(p_em, libvlc_MediaListPlayerNextItemSet,
-                            HandleMediaListPlayerNextItemSet, (__bridge void *)(_eventsHandler));
-        libvlc_event_attach(p_em, libvlc_MediaListPlayerStopped,
-                            HandleMediaListPlayerStopped, (__bridge void *)(_eventsHandler));
-    });
-}
-
-- (void)unregisterObservers
-{
-    libvlc_event_manager_t * p_em = libvlc_media_list_player_event_manager(instance);
-
-    if (!p_em) {
-        return;
-    }
-
-    libvlc_event_detach(p_em, libvlc_MediaListPlayerPlayed,
-                        HandleMediaListPlayerPlayed, (__bridge void *)(_eventsHandler));
-    libvlc_event_detach(p_em, libvlc_MediaListPlayerNextItemSet,
-                        HandleMediaListPlayerNextItemSet, (__bridge void *)(_eventsHandler));
-    libvlc_event_detach(p_em, libvlc_MediaListPlayerStopped,
-                        HandleMediaListPlayerStopped, (__bridge void *)(_eventsHandler));
 }
 
 - (instancetype)initWithOptions:(NSArray *)options
@@ -159,7 +155,6 @@ static void HandleMediaListPlayerStopped(const libvlc_event_t * event, void * op
 - (void)dealloc
 {
     [_mediaPlayer stop];
-    [self unregisterObservers];
     libvlc_media_list_player_release(instance);
 }
 
@@ -280,14 +275,17 @@ static void HandleMediaListPlayerStopped(const libvlc_event_t * event, void * op
     return _repeatMode;
 }
 
-#pragma mark - Delegate methods
-
-- (void)mediaListPlayerPlayed
+- (BOOL)isPlaying
 {
-    if ([_delegate respondsToSelector:@selector(mediaListPlayerFinishedPlayback:)]) {
-        [_delegate mediaListPlayerFinishedPlayback:self];
-    }
+    return libvlc_media_list_player_is_playing(instance);
 }
+
+- (VLCMediaPlayerState)state
+{
+    return (VLCMediaPlayerState)libvlc_media_list_player_get_state(instance);
+}
+
+#pragma mark - Delegate methods
 
 - (void)mediaListPlayerNextItemSet:(VLCMedia *)media
 {

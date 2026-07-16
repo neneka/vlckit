@@ -51,7 +51,7 @@
             return nil;
         }
 
-        _item = libvlc_renderer_item_hold(item);
+        _item = libvlc_renderer_item_retain(item);
 
         _name = [NSString stringWithUTF8String:libvlc_renderer_item_name(_item)];
         NSAssert(_name, @"VLCRendererItem: name is NULL");
