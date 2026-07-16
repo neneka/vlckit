@@ -28,6 +28,7 @@
 
 @interface VLCMediaPlayer (Internal)
 @property (readonly) libvlc_media_player_t *playerInstance;
+- (void)mediaPlayerStateChanged:(VLCMediaPlayerState)newState;
 @end
 
 #endif /* VLCMediaPlayer_Internal_h */

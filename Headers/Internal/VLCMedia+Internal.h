@@ -1,13 +1,9 @@
 /*****************************************************************************
- * VLCiOSLegacyDialogProvider.h: an implementation of the libvlc dialog API
- * Included for compatiblity with iOS 7
+ * VLCMedia+Internal.h
  *****************************************************************************
- * Copyright (C) 2009, 2014-2015 VLC authors and VideoLAN
- * Copyright (C) 2016 VideoLabs SAS
- * $Id$
+ * Copyright (C) 2024 VLC authors and VideoLAN
  *
- * Authors: Felix Paul Kühne <fkuehne # videolan org>
- *          Pierre d'Herbemont <pdherbemont # videolan org>
+ * Authors: Felix Paul Kühne <fkuehne # videolan.org
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by
@@ -24,17 +20,13 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#import <VLCDialogProvider.h>
+#ifndef VLCMedia_Internal_h
+#define VLCMedia_Internal_h
 
-@interface VLCiOSLegacyDialogProvider : VLCDialogProvider
+#import <VLCMedia.h>
 
-/**
- * initializer method to run the dialog provider instance on a specific library instance
- *
- * \param library the library instance
- * \note if param is NULL, [VLCLibrary sharedLibrary] will be used
- * \return the dialog provider instance, can be NULL on malloc failures
- */
-- (instancetype _Nullable)initWithLibrary:(VLCLibrary * _Nullable)library;
-
+@interface VLCMedia (Internal)
+- (void)parsingFinishedWithStatus:(VLCMediaParsedStatus)status;
 @end
+
+#endif /* VLCMedia_Internal_h */

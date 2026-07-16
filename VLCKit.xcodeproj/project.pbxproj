@@ -28,11 +28,16 @@
 		7D34F5531C909DDF008A39F0 /* VLCCustomDialogProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D34F5501C909DDF008A39F0 /* VLCCustomDialogProvider.m */; platformFilters = (ios, macos, tvos, xros, ); };
 		7D6263132BA5D61D00FAE5E1 /* libvlc_version.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D6263122BA5D61D00FAE5E1 /* libvlc_version.h */; };
 		7D6263182BA5D6FB00FAE5E1 /* StaticLibVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D797FB41DF41EBA00AD93ED /* StaticLibVLC.m */; };
+		7D6586242FEEDAF00021A4EC /* VLCMediaSlave.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D6586232FEEDAF00021A4EC /* VLCMediaSlave.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7D6586262FEEDB040021A4EC /* VLCMediaSlave.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D6586252FEEDB040021A4EC /* VLCMediaSlave.m */; };
+		7D6586282FEEDB760021A4EC /* VLCMediaDownloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D6586272FEEDB760021A4EC /* VLCMediaDownloader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7D65862A2FEEDCD00021A4EC /* VLCMediaDownloader.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D6586292FEEDCD00021A4EC /* VLCMediaDownloader.m */; };
+		7D65862F2FEEE3210021A4EC /* libvlc_downloader.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D65862E2FEEE3210021A4EC /* libvlc_downloader.h */; };
+		7D6586302FEEE3290021A4EC /* libvlc_downloader.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7D65862E2FEEE3210021A4EC /* libvlc_downloader.h */; };
 		7D6C89211C0CA90000321894 /* VLCAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 4B49C5FB1BC3D7870052D40C /* VLCAudio.m */; };
 		7D797FC41DF41F9100AD93ED /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D797FC31DF41F9100AD93ED /* libc++.tbd */; };
 		7D797FC61DF41F9500AD93ED /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D797FC51DF41F9500AD93ED /* libiconv.tbd */; };
 		7D803EC11C8F2AB400864A9C /* VLCEmbeddedDialogProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D803EBE1C8F2AB400864A9C /* VLCEmbeddedDialogProvider.m */; platformFilters = (ios, tvos, xros, ); };
-		7D803EC71C8F2AF900864A9C /* VLCiOSLegacyDialogProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D803EC51C8F2AF900864A9C /* VLCiOSLegacyDialogProvider.m */; platformFilter = ios; };
 		7D8939411B500D50008F2B14 /* VLCLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A5ECAC511DE8F7300F66AF3 /* VLCLibrary.m */; };
 		7D8939421B500D50008F2B14 /* VLCMedia.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A5ECAC611DE8F7300F66AF3 /* VLCMedia.m */; };
 		7D8939431B500D50008F2B14 /* VLCMediaList.m in Sources */ = {isa = PBXBuildFile; fileRef = 7A5ECAC711DE8F7300F66AF3 /* VLCMediaList.m */; };
@@ -57,6 +62,8 @@
 		7D9A03D12BA8498300EFFA4A /* libvlc_version.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7D6263122BA5D61D00FAE5E1 /* libvlc_version.h */; };
 		7DA7745A2A838BEB006E3273 /* VLCEventsConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DA774592A838BEB006E3273 /* VLCEventsConfiguration.m */; };
 		7DA7745E2A838BFB006E3273 /* VLCEventsConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DA7745D2A838BFB006E3273 /* VLCEventsConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7DAA11B2203C5727000A7D2F /* libvlc_parser.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DAA11B1203C56D5000A7D2F /* libvlc_parser.h */; };
+		7DAA11B3203C5727000A7D2F /* libvlc_parser.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DAA11B1203C56D5000A7D2F /* libvlc_parser.h */; };
 		7DB683D71C996187000C70BE /* VLCHelperCode.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DB683D31C996187000C70BE /* VLCHelperCode.m */; };
 		7DB683DA1C9961BA000C70BE /* VLCHelperCode.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DB683D91C9961BA000C70BE /* VLCHelperCode.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7DB9CEE52BA8B5730086981B /* libvlc_video.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DB9CEE42BA8B5730086981B /* libvlc_video.h */; };
@@ -97,7 +104,6 @@
 		7DE26F3B2BA72E28000CC89C /* VLCStreamSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D988CF324C72F8C00279703 /* VLCStreamSession.h */; platformFilters = (macos, ); settings = {ATTRIBUTES = (Public, ); }; };
 		7DE26F3C2BA72F65000CC89C /* libstatic-libvlc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D89394E1B500DBC008F2B14 /* libstatic-libvlc.a */; };
 		7DE57BEE2AB84753009EF02B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D6C891F1C0CA81F00321894 /* AVFoundation.framework */; };
-		7DEBDB06203C5727000A7D2F /* libvlc_events.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE9203C56D5000A7D2F /* libvlc_events.h */; };
 		7DEBDB07203C5727000A7D2F /* libvlc_media_discoverer.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAEA203C56D5000A7D2F /* libvlc_media_discoverer.h */; };
 		7DEBDB09203C5727000A7D2F /* libvlc_media_list_player.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE2203C56D5000A7D2F /* libvlc_media_list_player.h */; };
 		7DEBDB0A203C5727000A7D2F /* libvlc_media_list.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDADF203C56D4000A7D2F /* libvlc_media_list.h */; };
@@ -106,6 +112,8 @@
 		7DEBDB0D203C5727000A7D2F /* libvlc_renderer_discoverer.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE4203C56D5000A7D2F /* libvlc_renderer_discoverer.h */; };
 		7DEBDB0F203C5727000A7D2F /* libvlc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE6203C56D5000A7D2F /* libvlc.h */; };
 		7DEBDB10203C5727000A7D2F /* vlc.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 7DEBDAE7203C56D5000A7D2F /* vlc.h */; };
+		7DED47F42CA83E3300B9358A /* VLCMediaParser.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DED47F22CA83E3300B9358A /* VLCMediaParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7DED47F52CA83E3300B9358A /* VLCMediaParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 7DED47F32CA83E3300B9358A /* VLCMediaParser.m */; };
 		7DF2DFB72BABF82A00835369 /* VLCVideoCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D988CFD24C7304800279703 /* VLCVideoCommon.h */; platformFilters = (macos, ); settings = {ATTRIBUTES = (Public, ); }; };
 		7DF2DFB82BABF82E00835369 /* VLCVideoLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D988CF724C72FCE00279703 /* VLCVideoLayer.h */; platformFilters = (macos, ); settings = {ATTRIBUTES = (Public, ); }; };
 		7DF2DFB92BABF83100835369 /* VLCVideoView.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D988CF224C72F8C00279703 /* VLCVideoView.h */; platformFilters = (macos, ); settings = {ATTRIBUTES = (Public, ); }; };
@@ -124,7 +132,6 @@
 		7DFDF4E21C9AF17800BA86A6 /* VLCDialogProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D803EB51C8F21D200864A9C /* VLCDialogProvider.m */; platformFilters = (ios, macos, tvos, xros, ); };
 		7DFDF4E71C9AF24700BA86A6 /* VLCAudio.h in Headers */ = {isa = PBXBuildFile; fileRef = 4B49C5FD1BC3D7960052D40C /* VLCAudio.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7DFDF4E81C9AF25600BA86A6 /* VLCEmbeddedDialogProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D803EC31C8F2AEF00864A9C /* VLCEmbeddedDialogProvider.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		7DFDF4E91C9AF25600BA86A6 /* VLCiOSLegacyDialogProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D803EC41C8F2AEF00864A9C /* VLCiOSLegacyDialogProvider.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7DFDF4EA1C9AF25600BA86A6 /* VLCCustomDialogProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D34F5551C909DF6008A39F0 /* VLCCustomDialogProvider.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7DFDF4EB1C9AF27A00BA86A6 /* VLCDialogProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D803EB71C8F21EF00864A9C /* VLCDialogProvider.h */; platformFilters = (ios, macos, tvos, xros, ); settings = {ATTRIBUTES = (Public, ); }; };
 		ED25608E21F3A0F200396F9B /* VLCTranscoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 41E1959621BEA28F00F10277 /* VLCTranscoder.m */; platformFilters = (ios, macos, ); };
@@ -190,12 +197,13 @@
 			dstSubfolderSpec = 6;
 			files = (
 				7DFB523028D0B2EA0020DCDE /* libvlc_dialog.h in CopyFiles */,
-				7DEBDB06203C5727000A7D2F /* libvlc_events.h in CopyFiles */,
+				7D6586302FEEE3290021A4EC /* libvlc_downloader.h in CopyFiles */,
 				7DEBDB07203C5727000A7D2F /* libvlc_media_discoverer.h in CopyFiles */,
 				7DEBDB09203C5727000A7D2F /* libvlc_media_list_player.h in CopyFiles */,
 				7DEBDB0A203C5727000A7D2F /* libvlc_media_list.h in CopyFiles */,
 				7DEBDB0B203C5727000A7D2F /* libvlc_media_player.h in CopyFiles */,
 				7DFB523128D0B2EE0020DCDE /* libvlc_media_track.h in CopyFiles */,
+				7DAA11B3203C5727000A7D2F /* libvlc_parser.h in CopyFiles */,
 				7DEBDB0C203C5727000A7D2F /* libvlc_media.h in CopyFiles */,
 				7DFB523228D0B2F10020DCDE /* libvlc_picture.h in CopyFiles */,
 				7D9A03D12BA8498300EFFA4A /* libvlc_version.h in CopyFiles */,
@@ -253,6 +261,11 @@
 		7D5F8009185B72EB00C2CD75 /* VLCMediaListPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCMediaListPlayer.m; sourceTree = "<group>"; };
 		7D5F800B185B730F00C2CD75 /* VLCMediaListPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCMediaListPlayer.h; sourceTree = "<group>"; };
 		7D6263122BA5D61D00FAE5E1 /* libvlc_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libvlc_version.h; path = Headers/libvlc/libvlc_version.h; sourceTree = "<group>"; };
+		7D6586232FEEDAF00021A4EC /* VLCMediaSlave.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VLCMediaSlave.h; sourceTree = "<group>"; };
+		7D6586252FEEDB040021A4EC /* VLCMediaSlave.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VLCMediaSlave.m; sourceTree = "<group>"; };
+		7D6586272FEEDB760021A4EC /* VLCMediaDownloader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VLCMediaDownloader.h; sourceTree = "<group>"; };
+		7D6586292FEEDCD00021A4EC /* VLCMediaDownloader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VLCMediaDownloader.m; sourceTree = "<group>"; };
+		7D65862E2FEEE3210021A4EC /* libvlc_downloader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = libvlc_downloader.h; path = libvlc/vlc/include/vlc/libvlc_downloader.h; sourceTree = "<group>"; };
 		7D66193624D1F5DC00781E5D /* Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Prefix.pch; sourceTree = "<group>"; };
 		7D6C891F1C0CA81F00321894 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		7D797FB41DF41EBA00AD93ED /* StaticLibVLC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = StaticLibVLC.m; path = Sources/core/StaticLibVLC.m; sourceTree = SOURCE_ROOT; };
@@ -267,8 +280,6 @@
 		7D803EB71C8F21EF00864A9C /* VLCDialogProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCDialogProvider.h; sourceTree = "<group>"; };
 		7D803EBE1C8F2AB400864A9C /* VLCEmbeddedDialogProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCEmbeddedDialogProvider.m; sourceTree = "<group>"; };
 		7D803EC31C8F2AEF00864A9C /* VLCEmbeddedDialogProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VLCEmbeddedDialogProvider.h; sourceTree = "<group>"; };
-		7D803EC41C8F2AEF00864A9C /* VLCiOSLegacyDialogProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VLCiOSLegacyDialogProvider.h; sourceTree = "<group>"; };
-		7D803EC51C8F2AF900864A9C /* VLCiOSLegacyDialogProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCiOSLegacyDialogProvider.m; sourceTree = "<group>"; };
 		7D8938E81B500984008F2B14 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		7D8938EA1B50098C008F2B14 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		7D8938EC1B500991008F2B14 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -310,6 +321,7 @@
 		7D988D1D24C7318B00279703 /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/usr/lib/libbz2.tbd; sourceTree = DEVELOPER_DIR; };
 		7DA774592A838BEB006E3273 /* VLCEventsConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCEventsConfiguration.m; sourceTree = "<group>"; };
 		7DA7745D2A838BFB006E3273 /* VLCEventsConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCEventsConfiguration.h; sourceTree = "<group>"; };
+		7DAA11B1203C56D5000A7D2F /* libvlc_parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libvlc_parser.h; path = libvlc/vlc/include/vlc/libvlc_parser.h; sourceTree = "<group>"; };
 		7DB17966285C6509006201DB /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/AudioToolbox.framework; sourceTree = DEVELOPER_DIR; };
 		7DB17968285C650E006201DB /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/AudioUnit.framework; sourceTree = DEVELOPER_DIR; };
 		7DB1796A285C6513006201DB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
@@ -352,8 +364,10 @@
 		7DEBDAE5203C56D5000A7D2F /* libvlc_media.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libvlc_media.h; path = libvlc/vlc/include/vlc/libvlc_media.h; sourceTree = "<group>"; };
 		7DEBDAE6203C56D5000A7D2F /* libvlc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libvlc.h; path = libvlc/vlc/include/vlc/libvlc.h; sourceTree = "<group>"; };
 		7DEBDAE7203C56D5000A7D2F /* vlc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vlc.h; path = libvlc/vlc/include/vlc/vlc.h; sourceTree = "<group>"; };
-		7DEBDAE9203C56D5000A7D2F /* libvlc_events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libvlc_events.h; path = libvlc/vlc/include/vlc/libvlc_events.h; sourceTree = "<group>"; };
 		7DEBDAEA203C56D5000A7D2F /* libvlc_media_discoverer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = libvlc_media_discoverer.h; path = libvlc/vlc/include/vlc/libvlc_media_discoverer.h; sourceTree = "<group>"; };
+		7DED47F22CA83E3300B9358A /* VLCMediaParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VLCMediaParser.h; sourceTree = "<group>"; };
+		7DED47F32CA83E3300B9358A /* VLCMediaParser.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VLCMediaParser.m; sourceTree = "<group>"; };
+		7DED47F62CA8477A00B9358A /* VLCMedia+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "VLCMedia+Internal.h"; sourceTree = "<group>"; };
 		7DFB520628D0AA590020DCDE /* VLCFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCFilter.m; sourceTree = "<group>"; };
 		7DFB520728D0AA590020DCDE /* VLCAdjustFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCAdjustFilter.m; sourceTree = "<group>"; };
 		7DFB520E28D0AA730020DCDE /* VLCMediaPlayer+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "VLCMediaPlayer+Internal.h"; sourceTree = "<group>"; };
@@ -562,7 +576,6 @@
 			children = (
 				7D803EB51C8F21D200864A9C /* VLCDialogProvider.m */,
 				7D34F5501C909DDF008A39F0 /* VLCCustomDialogProvider.m */,
-				7D803EC51C8F2AF900864A9C /* VLCiOSLegacyDialogProvider.m */,
 				7D803EBE1C8F2AB400864A9C /* VLCEmbeddedDialogProvider.m */,
 			);
 			path = Dialogs;
@@ -640,6 +653,7 @@
 				7A5ECAC611DE8F7300F66AF3 /* VLCMedia.m */,
 				7A5ECAC711DE8F7300F66AF3 /* VLCMediaList.m */,
 				3C4A7E1D281C53AF00577290 /* VLCMediaMetaData.m */,
+				7D6586252FEEDB040021A4EC /* VLCMediaSlave.m */,
 			);
 			path = Media;
 			sourceTree = "<group>";
@@ -668,6 +682,8 @@
 			children = (
 				636E975711EBC67A002FE8A9 /* VLCMediaThumbnailer.m */,
 				6360B0E111E7F0C000EAD790 /* VLCMediaDiscoverer.m */,
+				7DED47F32CA83E3300B9358A /* VLCMediaParser.m */,
+				7D6586292FEEDCD00021A4EC /* VLCMediaDownloader.m */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -726,10 +742,10 @@
 				7DE26F262BA72D98000CC89C /* vlc-plugins-macosx-device-x86_64.h */,
 				7A5ECAE411DE8FEF00F66AF3 /* VLCLibVLCBridging.h */,
 				7D803EC31C8F2AEF00864A9C /* VLCEmbeddedDialogProvider.h */,
-				7D803EC41C8F2AEF00864A9C /* VLCiOSLegacyDialogProvider.h */,
 				7D34F5551C909DF6008A39F0 /* VLCCustomDialogProvider.h */,
 				7DB683D91C9961BA000C70BE /* VLCHelperCode.h */,
 				7DFB520E28D0AA730020DCDE /* VLCMediaPlayer+Internal.h */,
+				7DED47F62CA8477A00B9358A /* VLCMedia+Internal.h */,
 				6C953201297EDC7500F41EC8 /* VLCEventsHandler.h */,
 				7DFB521A28D0ABA50020DCDE /* VLCFilter+Internal.h */,
 				7D66193624D1F5DC00781E5D /* Prefix.pch */,
@@ -775,6 +791,7 @@
 				7A5ECAD611DE8FAB00F66AF3 /* VLCMediaList.h */,
 				7A5ECAD511DE8FAB00F66AF3 /* VLCMedia.h */,
 				3C4A7E19281C538100577290 /* VLCMediaMetaData.h */,
+				7D6586232FEEDAF00021A4EC /* VLCMediaSlave.h */,
 			);
 			path = Media;
 			sourceTree = "<group>";
@@ -814,6 +831,8 @@
 			children = (
 				636E979011EBC96D002FE8A9 /* VLCMediaThumbnailer.h */,
 				6360B0E311E7F0D300EAD790 /* VLCMediaDiscoverer.h */,
+				7DED47F22CA83E3300B9358A /* VLCMediaParser.h */,
+				7D6586272FEEDB760021A4EC /* VLCMediaDownloader.h */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -865,12 +884,13 @@
 			isa = PBXGroup;
 			children = (
 				7DFB522628D0B2840020DCDE /* libvlc_dialog.h */,
-				7DEBDAE9203C56D5000A7D2F /* libvlc_events.h */,
+				7D65862E2FEEE3210021A4EC /* libvlc_downloader.h */,
 				7DEBDAEA203C56D5000A7D2F /* libvlc_media_discoverer.h */,
 				7DEBDAE2203C56D5000A7D2F /* libvlc_media_list_player.h */,
 				7DEBDADF203C56D4000A7D2F /* libvlc_media_list.h */,
 				7DEBDAE3203C56D5000A7D2F /* libvlc_media_player.h */,
 				7DFB522228D0B27B0020DCDE /* libvlc_media_track.h */,
+				7DAA11B1203C56D5000A7D2F /* libvlc_parser.h */,
 				7DEBDAE5203C56D5000A7D2F /* libvlc_media.h */,
 				7DFB521E28D0B2740020DCDE /* libvlc_picture.h */,
 				7DEBDAE4203C56D5000A7D2F /* libvlc_renderer_discoverer.h */,
@@ -1012,7 +1032,9 @@
 				7DE26F362BA72D98000CC89C /* vlc-plugins-iphone-simulator.h in Headers */,
 				7DE26F382BA72D98000CC89C /* vlc-plugins-appletv-simulator-x86_64.h in Headers */,
 				7DE26F3A2BA72DB2000CC89C /* VLCStreamOutput.h in Headers */,
+				7DED47F42CA83E3300B9358A /* VLCMediaParser.h in Headers */,
 				7DE26F392BA72DA9000CC89C /* VLCTranscoder.h in Headers */,
+				7D65862F2FEEE3210021A4EC /* libvlc_downloader.h in Headers */,
 				7DF2DFB72BABF82A00835369 /* VLCVideoCommon.h in Headers */,
 				7DDC02121B501ECF0078FC84 /* VLCTime.h in Headers */,
 				3CD18254298D8C9900E466A3 /* VLCAudioEqualizer.h in Headers */,
@@ -1030,10 +1052,12 @@
 				ED25609521F3A3F800396F9B /* VLCRendererDiscoverer.h in Headers */,
 				ED25609621F3A3F800396F9B /* VLCRendererItem.h in Headers */,
 				7DFB520F28D0AA730020DCDE /* VLCMediaPlayer+Internal.h in Headers */,
+				7D6586242FEEDAF00021A4EC /* VLCMediaSlave.h in Headers */,
 				6C953202297EDC7500F41EC8 /* VLCEventsHandler.h in Headers */,
 				7DFDF4E81C9AF25600BA86A6 /* VLCEmbeddedDialogProvider.h in Headers */,
-				7DFDF4E91C9AF25600BA86A6 /* VLCiOSLegacyDialogProvider.h in Headers */,
+				7D6586282FEEDB760021A4EC /* VLCMediaDownloader.h in Headers */,
 				7DFB522328D0B27B0020DCDE /* libvlc_media_track.h in Headers */,
+				7DAA11B2203C5727000A7D2F /* libvlc_parser.h in Headers */,
 				7DFDF4EA1C9AF25600BA86A6 /* VLCCustomDialogProvider.h in Headers */,
 				7DB683DA1C9961BA000C70BE /* VLCHelperCode.h in Headers */,
 				7DFB521F28D0B2740020DCDE /* libvlc_picture.h in Headers */,
@@ -1181,6 +1205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7D6586262FEEDB040021A4EC /* VLCMediaSlave.m in Sources */,
 				7DE26F182BA72BB7000CC89C /* VLCStreamOutput.m in Sources */,
 				7DE26F192BA72BB7000CC89C /* VLCStreamSession.m in Sources */,
 				7DE26F1A2BA72BB7000CC89C /* VLCVideoCommon.m in Sources */,
@@ -1194,14 +1219,15 @@
 				7D803EC11C8F2AB400864A9C /* VLCEmbeddedDialogProvider.m in Sources */,
 				7DFB520828D0AA590020DCDE /* VLCFilter.m in Sources */,
 				7D6C89211C0CA90000321894 /* VLCAudio.m in Sources */,
+				7DED47F52CA83E3300B9358A /* VLCMediaParser.m in Sources */,
 				3CD18258298D8CC600E466A3 /* VLCAudioEqualizer.m in Sources */,
 				3C4A7E1E281C53AF00577290 /* VLCMediaMetaData.m in Sources */,
-				7D803EC71C8F2AF900864A9C /* VLCiOSLegacyDialogProvider.m in Sources */,
 				7D8939411B500D50008F2B14 /* VLCLibrary.m in Sources */,
 				6C218374285090F2000C4AC9 /* VLCConsoleLogger.m in Sources */,
 				7DFB520B28D0AA590020DCDE /* VLCAdjustFilter.m in Sources */,
 				7DFDF4E21C9AF17800BA86A6 /* VLCDialogProvider.m in Sources */,
 				7D8939421B500D50008F2B14 /* VLCMedia.m in Sources */,
+				7D65862A2FEEDCD00021A4EC /* VLCMediaDownloader.m in Sources */,
 				7DA7745A2A838BEB006E3273 /* VLCEventsConfiguration.m in Sources */,
 				7DB683D71C996187000C70BE /* VLCHelperCode.m in Sources */,
 				7D8939431B500D50008F2B14 /* VLCMediaList.m in Sources */,

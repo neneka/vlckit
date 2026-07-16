@@ -1,23 +1,26 @@
-From 458d01339a4c1731c2cd24201f03cb2366e00bf7 Mon Sep 17 00:00:00 2001
+From 50d09d4d8e8c364b954fed6fbaf1e98cff73248f Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Felix=20Paul=20K=C3=BChne?= <felix@feepk.net>
 Date: Thu, 11 Aug 2022 11:59:13 +0200
-Subject: [PATCH 01/12] Revert "contrib: live555: update to 2022.07.14"
+Subject: [PATCH 01/20] Revert "contrib: live555: update to 2022.07.14"
 
 This reverts commit 78998cab182bbdbd1915deeead1ad4bc945b514e.
 ---
- .../DISABLE_LOOPBACK_IP_ADDRESS_CHECK.patch   |  19 ++
+ .../DISABLE_LOOPBACK_IP_ADDRESS_CHECK.patch   |  19 +++
  contrib/src/live555/SHA512SUMS                |   2 +-
- contrib/src/live555/add-pkgconfig-file.patch  |   2 +-
+ contrib/src/live555/add-pkgconfig-file.patch  |   6 +-
  contrib/src/live555/android-no-ifaddrs.patch  |  13 --
- .../src/live555/expose_server_string.patch    |  56 +++---
- .../src/live555/in_addr-s_addr-field.patch    |  42 +++++
- contrib/src/live555/live555-nosignal.patch    | 166 +++++++++++-------
- contrib/src/live555/no-null-reference.patch   | 128 ++++++++++++++
- contrib/src/live555/rules.mak                 |  15 +-
+ .../src/live555/expose_server_string.patch    |  56 +++----
+ .../src/live555/in_addr-s_addr-field.patch    |  42 ++++++
+ contrib/src/live555/live555-nosignal.patch    | 139 ++++++++++++++++++
+ contrib/src/live555/live555-vista-inet.patch  |  33 -----
+ contrib/src/live555/no-null-reference.patch   | 128 ++++++++++++++++
+ contrib/src/live555/rules.mak                 |  93 +++++-------
  contrib/src/live555/winstore.patch            |  30 ++++
- 10 files changed, 360 insertions(+), 113 deletions(-)
+ 11 files changed, 429 insertions(+), 132 deletions(-)
  create mode 100644 contrib/src/live555/DISABLE_LOOPBACK_IP_ADDRESS_CHECK.patch
  create mode 100644 contrib/src/live555/in_addr-s_addr-field.patch
+ create mode 100644 contrib/src/live555/live555-nosignal.patch
+ delete mode 100644 contrib/src/live555/live555-vista-inet.patch
  create mode 100644 contrib/src/live555/no-null-reference.patch
  create mode 100644 contrib/src/live555/winstore.patch
 
@@ -47,17 +50,33 @@ index 0000000000..8a2a5e7220
 + 
 +     if (sock >= 0) {
 diff --git a/contrib/src/live555/SHA512SUMS b/contrib/src/live555/SHA512SUMS
-index 53d59ce6c1..f459fb9d16 100644
+index 6fe5e43d6b..f459fb9d16 100644
 --- a/contrib/src/live555/SHA512SUMS
 +++ b/contrib/src/live555/SHA512SUMS
 @@ -1 +1 @@
--382544d9d9fe200699669a1f3301efb4ccec0193499c95b532ea923c380b1ec6fa721a4118d36a447ba9df08575f185498f244293c66bbe97cff0482eab033c7  live.2022.07.14.tar.gz
+-31b325f406c651e9008367c90937a1dc555588f76a0aaa820edb62ccfed3bb9f46d42fae4fe62f8812c7f25d0a3eeb13a8267b84130dfee7a25ab74f5d94c57a  live.2026.06.24.tar.gz
 +319639acef6474b2eec0bdfa3416ca3c88a60f57d9d22911eee018fc494978fde93a241556bc0ea309f0b6a35e0242bd44a8f4de83a845f80d9ca5f94254ade6  live.2016.11.28.tar.gz
 diff --git a/contrib/src/live555/add-pkgconfig-file.patch b/contrib/src/live555/add-pkgconfig-file.patch
-index c4a0e2e9b7..6f477dc71e 100644
+index 8a1502bc7b..6f477dc71e 100644
 --- a/contrib/src/live555/add-pkgconfig-file.patch
 +++ b/contrib/src/live555/add-pkgconfig-file.patch
-@@ -28,7 +28,7 @@ diff --git a/Makefile.tail b/Makefile.tail
+@@ -11,7 +11,7 @@ diff --git a/Makefile.tail b/Makefile.tail
+ -install:
+ +install_shared_libraries:
+ +	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
+-+	sed "s#@PREFIX@#$(PREFIX)#;s#@VERSION@#$(VERSION)#" live555.pc.in > $(DESTDIR)$(LIBDIR)/pkgconfig/live555.pc
+++	sed "s#@PREFIX@#$(PREFIX)#;s#@LIBDIR@#$(LIBDIR)#;s#@VERSION@#$(VERSION)#" live555.pc.in > $(DESTDIR)$(LIBDIR)/pkgconfig/live555.pc
+ +	chmod 644 $(DESTDIR)$(LIBDIR)/pkgconfig/live555.pc
+ +
+ +install: $(INSTALL2)
+@@ -22,13 +22,13 @@ diff --git a/Makefile.tail b/Makefile.tail
+ +++ live.2016.07.19/live555.pc.in	2017-01-19 18:46:01.456059400 +0100
+ @@ -0,0 +1,9 @@
+ +prefix=@PREFIX@
+-+libdir=${prefix}/lib
+++libdir=@LIBDIR@
+ +includedir=${prefix}/include
+ +
  +Name: live555
  +Description: multimedia RTSP streaming library
  +Version: @VERSION@
@@ -246,98 +265,57 @@ index 0000000000..d4ff3a9381
 + 		 (const char*)&imr, sizeof (struct ip_mreq_source)) < 0) {
 +     return False;
 diff --git a/contrib/src/live555/live555-nosignal.patch b/contrib/src/live555/live555-nosignal.patch
-index 29648a103f..71c8c33e7c 100644
---- a/contrib/src/live555/live555-nosignal.patch
+new file mode 100644
+index 0000000000..71c8c33e7c
+--- /dev/null
 +++ b/contrib/src/live555/live555-nosignal.patch
-@@ -2,31 +2,9 @@ Copyright (C) 2015 Rémi Denis-Courmont
- 
- Licensed under the terms of the GNU LGPL version 2.1 or later.
- 
--diff -ru live555.orig/groupsock/GroupsockHelper.cpp live555/groupsock/GroupsockHelper.cpp
----- live555.orig/groupsock/GroupsockHelper.cpp	2022-06-16 11:14:03.000000000 +0000
--+++ live555/groupsock/GroupsockHelper.cpp	2022-07-16 11:04:10.334840299 +0000
--@@ -47,6 +47,9 @@
-- #include <net/if.h>
-- #endif
-- #include <stdio.h>
--+#ifndef MSG_NOSIGNAL
--+# define MSG_NOSIGNAL 0
--+#endif
-- 
-- // By default, use INADDR_ANY for the sending and receiving interfaces (IPv4 only):
-- ipv4AddressBits SendingInterfaceAddr = INADDR_ANY;
--@@ -447,7 +450,7 @@
-- 		    unsigned char* buffer, unsigned bufferSize) {
--   do {
--     SOCKLEN_T dest_len = addressSize(addressAndPort);
---    int bytesSent = sendto(socket, (char*)buffer, bufferSize, 0,
--+    int bytesSent = sendto(socket, (char*)buffer, bufferSize, MSG_NOSIGNAL,
-- 			   (struct sockaddr const*)&addressAndPort, dest_len);
--     if (bytesSent != (int)bufferSize) {
--       char tmpBuf[100];
- diff -ru live555.orig/liveMedia/RTPInterface.cpp live555/liveMedia/RTPInterface.cpp
----- live555.orig/liveMedia/RTPInterface.cpp	2022-06-16 11:14:03.000000000 +0000
--+++ live555/liveMedia/RTPInterface.cpp	2022-07-16 11:05:59.904820188 +0000
+@@ -0,0 +1,139 @@
++Copyright (C) 2015 Rémi Denis-Courmont
++
++Licensed under the terms of the GNU LGPL version 2.1 or later.
++
++diff -ru live555.orig/liveMedia/RTPInterface.cpp live555/liveMedia/RTPInterface.cpp
 +--- live555.orig/liveMedia/RTPInterface.cpp	2015-05-21 20:34:45.855307019 +0300
 ++++ live555/liveMedia/RTPInterface.cpp	2015-05-21 20:38:10.383305167 +0300
- @@ -23,6 +23,9 @@
-  #include "RTPInterface.hh"
-  #include <GroupsockHelper.hh>
-@@ -37,27 +15,27 @@ diff -ru live555.orig/liveMedia/RTPInterface.cpp live555/liveMedia/RTPInterface.
-  
-  ////////// Helper Functions - Definition //////////
-  
--@@ -382,7 +385,7 @@
-- 				      Boolean forceSendToSucceed) {
--   int sendResult = (tlsState != NULL && tlsState->isNeeded)
--     ? tlsState->write((char const*)data, dataSize)
---    : send(socketNum, (char const*)data, dataSize, 0/*flags*/);
--+    : send(socketNum, (char const*)data, dataSize, MSG_NOSIGNAL);
++@@ -23,6 +23,9 @@
++ #include "RTPInterface.hh"
++ #include <GroupsockHelper.hh>
++ #include <stdio.h>
+++#ifndef MSG_NOSIGNAL
+++# define MSG_NOSIGNAL 0
+++#endif
++ 
++ ////////// Helper Functions - Definition //////////
++ 
 +@@ -339,7 +339,7 @@
 + #endif
 + 
 + Boolean RTPInterface::sendDataOverTCP(int socketNum, u_int8_t const* data, unsigned dataSize, Boolean forceSendToSucceed) {
 +-  int sendResult = send(socketNum, (char const*)data, dataSize, 0/*flags*/);
 ++  int sendResult = send(socketNum, (char const*)data, dataSize, MSG_NOSIGNAL);
-    if (sendResult < (int)dataSize) {
-      // The TCP send() failed - at least partially.
-  
--@@ -398,7 +401,7 @@
++   if (sendResult < (int)dataSize) {
++     // The TCP send() failed - at least partially.
++ 
 +@@ -353,7 +353,7 @@
 +       fprintf(stderr, "sendDataOverTCP: resending %d-byte send (blocking)\n", numBytesRemainingToSend); fflush(stderr);
 + #endif
-        makeSocketBlocking(socketNum, RTPINTERFACE_BLOCKING_WRITE_TIMEOUT_MS);
--       sendResult = (tlsState != NULL && tlsState->isNeeded)
-- 	? tlsState->write((char const*)(&data[numBytesSentSoFar]), numBytesRemainingToSend)
---	: send(socketNum, (char const*)(&data[numBytesSentSoFar]), numBytesRemainingToSend, 0/*flags*/);
--+	: send(socketNum, (char const*)(&data[numBytesSentSoFar]), numBytesRemainingToSend, MSG_NOSIGNAL);
--       makeSocketNonBlocking(socketNum);
++       makeSocketBlocking(socketNum, RTPINTERFACE_BLOCKING_WRITE_TIMEOUT_MS);
 +-      sendResult = send(socketNum, (char const*)(&data[numBytesSentSoFar]), numBytesRemainingToSend, 0/*flags*/);
 ++      sendResult = send(socketNum, (char const*)(&data[numBytesSentSoFar]), numBytesRemainingToSend, MSG_NOSIGNAL);
-        if ((unsigned)sendResult != numBytesRemainingToSend) {
-  	// The blocking "send()" failed, or timed out.  In either case, we assume that the
++       if ((unsigned)sendResult != numBytesRemainingToSend) {
++ 	// The blocking "send()" failed, or timed out.  In either case, we assume that the
 + 	// TCP connection has failed (or is 'hanging' indefinitely), and we stop using it
- diff -ru live555.orig/liveMedia/RTSPClient.cpp live555/liveMedia/RTSPClient.cpp
----- live555.orig/liveMedia/RTSPClient.cpp	2022-06-16 11:14:03.000000000 +0000
--+++ live555/liveMedia/RTSPClient.cpp	2022-07-16 11:09:59.856563940 +0000
++diff -ru live555.orig/liveMedia/RTSPClient.cpp live555/liveMedia/RTSPClient.cpp
 +--- live555.orig/liveMedia/RTSPClient.cpp	2015-05-21 20:34:45.855307019 +0300
 ++++ live555/liveMedia/RTSPClient.cpp	2015-05-21 20:39:54.327304226 +0300
- @@ -24,6 +24,9 @@
-  #include "Locale.hh"
-  #include <GroupsockHelper.hh>
-@@ -66,36 +44,96 @@ diff -ru live555.orig/liveMedia/RTSPClient.cpp live555/liveMedia/RTSPClient.cpp
- +# define MSG_NOSIGNAL 0
- +#endif
-  
-- RTSPClient* RTSPClient::createNew(UsageEnvironment& env, char const* rtspURL,
-- 				  int verbosityLevel,
--@@ -2022,7 +2025,7 @@
--       if (fOutputTLS->isNeeded) {
-- 	return fOutputTLS->write(data, count);
--       } else {
---	return send(fOutputSocketNum, data, count, 0);
--+	return send(fOutputSocketNum, data, count, MSG_NOSIGNAL);
--       }
++@@ -24,6 +24,9 @@
++ #include "Locale.hh"
++ #include <GroupsockHelper.hh>
++ #include "ourMD5.hh"
+++#ifndef MSG_NOSIGNAL
+++# define MSG_NOSIGNAL 0
+++#endif
++ 
 + ////////// RTSPClient implementation //////////
 + 
 +@@ -497,7 +500,7 @@
@@ -356,15 +334,8 @@ index 29648a103f..71c8c33e7c 100644
 +-    send(fOutputSocketNum, tmpBuf, strlen(tmpBuf), 0);
 ++    send(fOutputSocketNum, tmpBuf, strlen(tmpBuf), MSG_NOSIGNAL);
 +   }
-  }
-  
--diff -ru live555.orig/liveMedia/RTSPServer.cpp live555/liveMedia/RTSPServer.cpp
----- live555.orig/liveMedia/RTSPServer.cpp	2022-06-16 11:14:03.000000000 +0000
--+++ live555/liveMedia/RTSPServer.cpp	2022-07-16 11:11:37.086888246 +0000
--@@ -23,6 +23,9 @@
-- #include "RTSPRegisterSender.hh"
-- #include "Base64.hh"
-- #include <GroupsockHelper.hh>
++ }
++ 
 +diff -ru live555.orig/liveMedia/RTSPServerSupportingHTTPStreaming.cpp live555/liveMedia/RTSPServerSupportingHTTPStreaming.cpp
 +--- live555.orig/liveMedia/RTSPServerSupportingHTTPStreaming.cpp	2015-05-21 20:34:45.857307019 +0300
 ++++ live555/liveMedia/RTSPServerSupportingHTTPStreaming.cpp	2015-05-21 20:39:44.568304314 +0300
@@ -402,11 +373,10 @@ index 29648a103f..71c8c33e7c 100644
 + #define USE_SIGNALS 1
 + #endif
 + #include <stdio.h>
- +#ifndef MSG_NOSIGNAL
- +# define MSG_NOSIGNAL 0
- +#endif
-  
-- ////////// RTSPServer implementation //////////
+++#ifndef MSG_NOSIGNAL
+++# define MSG_NOSIGNAL 0
+++#endif
++ 
 + // By default, use INADDR_ANY for the sending and receiving interfaces:
 + netAddressBits SendingInterfaceAddr = INADDR_ANY;
 +@@ -342,7 +345,7 @@
@@ -427,16 +397,7 @@ index 29648a103f..71c8c33e7c 100644
 ++#ifndef MSG_NOSIGNAL
 ++# define MSG_NOSIGNAL 0
 ++#endif
-  
--@@ -976,7 +979,7 @@
--     if (fOutputTLS->isNeeded) {
--         fOutputTLS->write((char const*)fResponseBuffer, numBytesToWrite);
--     } else {
---        send(fClientOutputSocket, (char const*)fResponseBuffer, numBytesToWrite, 0);
--+        send(fClientOutputSocket, (char const*)fResponseBuffer, numBytesToWrite, MSG_NOSIGNAL);
--    }
--     
--     if (playAfterSetup) {
++ 
 + TCPStreamSink* TCPStreamSink::createNew(UsageEnvironment& env, int socketNum) {
 +   return new TCPStreamSink(env, socketNum);
 +@@ -51,7 +54,7 @@
@@ -448,6 +409,45 @@ index 29648a103f..71c8c33e7c 100644
 +     if (numBytesWritten < (int)numUnwrittenBytes()) {
 +       // The output socket is no longer writable.  Set a handler to be called when it becomes writable again.
 +       fOutputSocketIsWritable = False;
+diff --git a/contrib/src/live555/live555-vista-inet.patch b/contrib/src/live555/live555-vista-inet.patch
+deleted file mode 100644
+index 240603f763..0000000000
+--- a/contrib/src/live555/live555-vista-inet.patch
++++ /dev/null
+@@ -1,33 +0,0 @@
+---- live555/groupsock/NetAddress.cpp.orig	2026-06-25 00:45:17.000000000 +0200
+-+++ live555/groupsock/NetAddress.cpp	2026-07-03 15:07:01.647505300 +0200
+-@@ -165,6 +165,30 @@ Boolean operator==(struct sockaddr_stora
+-   }
+- }
+- 
+-+#if defined(_WIN32) && _WIN32_WINNT < 0x0600
+-+#ifndef AI_ADDRCONFIG
+-+# define AI_ADDRCONFIG   0x0400
+-+#endif
+-+static inline int inet_pton(int af, const char *src, u_int8_t *b)
+-+{
+-+  if (af != AF_INET) {
+-+    return 0;
+-+  }
+-+  return sscanf (src, "%hhu.%hhu.%hhu.%hhu",
+-+                 b + 0, b + 1, b + 2, b + 3) == 4;
+-+}
+-+
+-+static inline void inet_ntop(int af, const void *src, char *dst, int len)
+-+{
+-+  if (af != AF_INET) {
+-+    return;
+-+  }
+-+  const unsigned char *b = static_cast<const unsigned char *>(src);
+-+  _snprintf(dst, len, "%hhu.%hhu.%hhu.%hhu",
+-+            b[0], b[1], b[2], b[3]);
+-+}
+-+#endif
+-+
+- 
+- ////////// NetAddressList //////////
+- 
 diff --git a/contrib/src/live555/no-null-reference.patch b/contrib/src/live555/no-null-reference.patch
 new file mode 100644
 index 0000000000..a1dea30fbc
@@ -583,18 +583,37 @@ index 0000000000..a1dea30fbc
 + 			     char const* rangeParamsStr, char const* rtpInfoParamsStr);
 +   Boolean handleTEARDOWNResponse(MediaSession& session, MediaSubsession& subsession);
 diff --git a/contrib/src/live555/rules.mak b/contrib/src/live555/rules.mak
-index f563232242..6afe1f7800 100644
+index d98cef8ff4..b8284d47b9 100644
 --- a/contrib/src/live555/rules.mak
 +++ b/contrib/src/live555/rules.mak
-@@ -1,6 +1,6 @@
+@@ -1,25 +1,9 @@
  # live555
  
--LIVE555_VERSION := 2022.07.14
+-LIVE555_VERSION := 2026.06.24
 +LIVE555_VERSION := 2016.11.28
  LIVE555_FILE := live.$(LIVE555_VERSION).tar.gz
  LIVEDOTCOM_URL := $(CONTRIB_VIDEOLAN)/live555/$(LIVE555_FILE)
  
-@@ -19,7 +19,7 @@ $(TARBALLS)/$(LIVE555_FILE):
+-ifdef HAVE_GCC
+-# older GCC doesn't support -std=c++20 required for std::atomic_flag
+-ifeq ($(call gcc_at_least, 10), true)
+-HAVE_LIVE555_CPP20=1
+-endif
+-else
+-ifdef HAVE_CLANG
+-# older CLANG doesn't support -std=c++20 required for std::atomic_flag
+-ifeq ($(call clang_at_least, 12), true)
+-HAVE_LIVE555_CPP20=1
+-endif
+-else
+-HAVE_LIVE555_CPP20=1
+-endif
+-endif
+-
+ ifdef BUILD_NETWORK
+ ifdef GNUV3
+ PKGS += live555
+@@ -35,7 +19,7 @@ $(TARBALLS)/$(LIVE555_FILE):
  
  .sum-live555: $(LIVE555_FILE)
  
@@ -603,22 +622,65 @@ index f563232242..6afe1f7800 100644
  
  LIVE_TARGET = $(error live555 target not defined!)
  ifdef HAVE_LINUX
-@@ -31,10 +31,9 @@ LIVE_EXTRA_CFLAGS += -DDISABLE_LOOPBACK_IP_ADDRESS_CHECK=1
+@@ -47,10 +31,9 @@ LIVE_EXTRA_CFLAGS += -DDISABLE_LOOPBACK_IP_ADDRESS_CHECK=1
  endif
  ifdef HAVE_WIN32
  LIVE_TARGET := mingw
 -LIVE_EXTRA_CFLAGS += -DNO_GETIFADDRS=1
  endif
  ifdef HAVE_DARWIN_OS
--LIVE_TARGET := macosx-bigsur
+-LIVE_TARGET := macosx-catalina
 +LIVE_TARGET := macosx
  endif
  ifdef HAVE_BSD
  LIVE_TARGET := freebsd
-@@ -74,6 +73,10 @@ endif
- 	mv live live.$(LIVE555_VERSION)
- 	# Patch for MSG_NOSIGNAL
- 	$(APPLY) $(SRC)/live555/live555-nosignal.patch
+@@ -63,59 +46,61 @@ LIVE_TARGET := solaris-32bit
+ endif
+ endif
+ 
+-live555: UNPACK_DIR=live
+ live555: $(LIVE555_FILE) .sum-live555
+-	rm -rf $(UNPACK_DIR)
+-	$(UNPACK)
++	rm -Rf live && $(UNPACK)
+ 
+ 	# Change permissions to patch and sed the source
+-	chmod -R u+w $(UNPACK_DIR)
++	chmod -R u+w live
+ 	# Remove hardcoded cc, c++, ar variables
+-	sed -e 's%C_COMPILER%#C_COMPILER%' -e 's%CPLUSPLUS_COMPILER%#CPLUSPLUS_COMPILER%' -e 's%LIBRARY_LINK%#LIBRARY_LINK%' -i.orig $(UNPACK_DIR)/config.$(LIVE_TARGET)
+-	# Remove hardcoded --std=c+20 on un supported compilers
+-ifndef HAVE_LIVE555_CPP20
+-	sed -e 's%-std=c++20% -DNO_STD_LIB=1%' -i.orig $(UNPACK_DIR)/config.$(LIVE_TARGET)
+-endif
+-	# Add the Extra_CFLAGS to the config files
+-	sed -i.orig \
+-		-e 's%^\(COMPILE_OPTS.*\)$$%\1 '"$(LIVE_EXTRA_CFLAGS)%" $(UNPACK_DIR)/config.$(LIVE_TARGET)
++	cd live && sed -e 's%cc%$(CC)%' -e 's%c++%$(CXX)%' -e 's%LIBRARY_LINK =.*ar%LIBRARY_LINK = $(AR)%' -i.orig config.$(LIVE_TARGET)
++	# Replace libtool -s by ar cr for macOS only
++	cd live && sed -i.orig -e s/"libtool -s -o"/"ar cr"/g config.macosx*
++	# Add Extra LDFLAGS for macOS
++	cd live && sed -i.orig -e 's%$(CXX)%$(CXX)\ $(EXTRA_LDFLAGS)%' config.macosx*
++	# Add CXXFLAGS for macOS (force libc++)
++	cd live && sed -i.orig -e 's%^\(CPLUSPLUS_FLAGS.*\)$$%\1 '"$(CXXFLAGS)%" config.macosx*
++	# Add the Extra_CFLAGS to all config files
++	cd live && sed -i.orig \
++		-e 's%^\(COMPILE_OPTS.*\)$$%\1 '"$(LIVE_EXTRA_CFLAGS)%" config.*
+ 	# We want 64bits offsets and PIC on Linux
+-	sed -e 's%-D_FILE_OFFSET_BITS=64%-D_FILE_OFFSET_BITS=64\ -fPIC\ -DPIC%' -i.orig $(UNPACK_DIR)/config.linux
++	cd live && sed -e 's%-D_FILE_OFFSET_BITS=64%-D_FILE_OFFSET_BITS=64\ -fPIC\ -DPIC%' -i.orig config.linux
+ 	# Disable Locale for Solaris
+-	sed -e 's%-DSOLARIS%-DSOLARIS -DXLOCALE_NOT_USED%' -i.orig $(UNPACK_DIR)/config.solaris-*bit
++	cd live && sed -e 's%-DSOLARIS%-DSOLARIS -DXLOCALE_NOT_USED%' -i.orig config.solaris-*bit
+ ifdef HAVE_ANDROID
+ 	# Disable locale on Android too
+-	sed -e 's%-DPIC%-DPIC -DNO_SSTREAM=1 -DLOCALE_NOT_USED -I$(ANDROID_NDK)/platforms/android-$(ANDROID_API)/arch-$(PLATFORM_SHORT_ARCH)/usr/include%' -i.orig $(UNPACK_DIR)/config.linux
+-endif
++	cd live && sed -e 's%-DPIC%-DPIC -DNO_SSTREAM=1 -DLOCALE_NOT_USED -I$(ANDROID_NDK)/platforms/android-$(ANDROID_API)/arch-$(PLATFORM_SHORT_ARCH)/usr/include%' -i.orig config.linux
++endif
++	mv live live.$(LIVE555_VERSION)
++	# Patch for MSG_NOSIGNAL
++	$(APPLY) $(SRC)/live555/live555-nosignal.patch
 +	# Don't use FormatMessageA on WinRT
 +	$(APPLY) $(SRC)/live555/winstore.patch
 +	# Don't rely on undefined behaviors
@@ -626,8 +688,7 @@ index f563232242..6afe1f7800 100644
  	# Add a pkg-config file
  	$(APPLY) $(SRC)/live555/add-pkgconfig-file.patch
  	# Expose Server:
-@@ -82,8 +85,8 @@ endif
- 	$(APPLY) $(SRC)/live555/mingw-static-libs.patch
+ 	$(APPLY) $(SRC)/live555/expose_server_string.patch
  	# FormatMessageA is available on all Windows versions, even WinRT
  	$(APPLY) $(SRC)/live555/live555-formatmessage.patch
 -	# ifaddrs.h is supported since API level 24
@@ -636,7 +697,39 @@ index f563232242..6afe1f7800 100644
 +	$(APPLY) $(SRC)/live555/DISABLE_LOOPBACK_IP_ADDRESS_CHECK.patch
  	# Don't use unavailable off64_t functions
  	$(APPLY) $(SRC)/live555/file-offset-bits-64.patch
- 	cd $(UNPACK_DIR) && sed -i.orig "s,LIBRARY_LINK =.*,LIBRARY_LINK = $(AR) cr ,g" config.macosx*
+-	# add IPv4 inet_pton()/inet_ntop() helper on older Windows
+-	$(APPLY) $(SRC)/live555/live555-vista-inet.patch
+-	# fix Win32 time_tm constructor to build on older compilers
+-	sed -e 's,= tm{},= tm\(\),' -i.orig $(UNPACK_DIR)/liveMedia/RTSPCommon.cpp
+-	# disable code built/installed in unused folder
+-	sed -e 's,all: $$(,all: #,' -e 's,install: $$,install: #,' -e 's,install ,#install ,' -i.orig $(UNPACK_DIR)/testProgs/Makefile.tail
+-	sed -e 's,all: $$(,all: #,' -e 's,install: $$,install: #,' -e 's,install ,#install ,' -i.orig $(UNPACK_DIR)/mediaServer/Makefile.tail
+-	sed -e 's,all: $$(,all: #,' -e 's,install: $$,install: #,' -e 's,install ,#install ,' -i.orig $(UNPACK_DIR)/proxyServer/Makefile.tail
+-	sed -e 's,all: $$(,all: #,' -e 's,install: $$,install: #,' -e 's,install ,#install ,' -i.orig $(UNPACK_DIR)/hlsProxy/Makefile.tail
+-	$(MOVE)
++	cd $(UNPACK_DIR) && sed -i.orig "s,LIBRARY_LINK =.*,LIBRARY_LINK = $(AR) cr ,g" config.macosx*
++	mv live.$(LIVE555_VERSION) $@ && touch $@
+ 
+-LIVE555_ENV := $(HOSTVARS) C_COMPILER=$(CC) CPLUSPLUS_COMPILER=$(CXX) LIBRARY_LINK="$(AR) cr " \
+-	PREFIX=$(PREFIX) DESTDIR= LIBDIR=$(PREFIX)/lib
++LIVE555_SUBDIRS=groupsock liveMedia UsageEnvironment BasicUsageEnvironment
+ 
+-.live555: BUILD_DIR=$<
+ .live555: live555
+ 	$(REQUIRE_GNUV3)
++	cd $< && for subdir in $(LIVE555_SUBDIRS); do \
++		echo "PREFIX = $(PREFIX)" >> $$subdir/Makefile.head && \
++		echo "LIBDIR = $(PREFIX)/lib" >> $$subdir/Makefile.head ; done
++	cd $< && echo "LIBDIR = $(PREFIX)/lib" >> Makefile.head && \
++		echo "PREFIX = $(PREFIX)" >> Makefile.head
+ 	cd $< && ./genMakefiles $(LIVE_TARGET)
+-	+$(MAKEBUILD) $(LIVE555_ENV)
+-	+$(MAKEBUILD) $(LIVE555_ENV) install
+-	+$(MAKEBUILD) $(LIVE555_ENV) install_shared_libraries
++	cd $< && for subdir in $(LIVE555_SUBDIRS); do $(MAKE) $(HOSTVARS) -C $$subdir; done
++	cd $< && for subdir in $(LIVE555_SUBDIRS); do $(MAKE) $(HOSTVARS) -C $$subdir install; done
++	$(MAKE) -C $< install_shared_libraries
+ 	touch $@
 diff --git a/contrib/src/live555/winstore.patch b/contrib/src/live555/winstore.patch
 new file mode 100644
 index 0000000000..7723e3ba12
@@ -674,5 +767,5 @@ index 0000000000..7723e3ba12
 + #endif
 +
 -- 
-2.39.5 (Apple Git-154)
+2.50.1 (Apple Git-155)
 

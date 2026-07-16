@@ -34,7 +34,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef NS_ENUM(NSInteger, VLCMediaTrackType) NS_SWIFT_NAME(VLCMedia.TrackType);
-@class VLCLibrary, VLCMedia, VLCTime, VLCAudio, VLCMediaPlayer, VLCMediaPlayerTrack, VLCAdjustFilter, VLCAudioEqualizer, VLCMediaPlayerTitleDescription, VLCMediaPlayerChapterDescription;
+@class VLCLibrary, VLCMedia, VLCTime, VLCAudio, VLCMediaPlayer, VLCMediaPlayerTrack, VLCAdjustFilter, VLCAudioEqualizer, VLCMediaPlayerTitleDescription, VLCMediaPlayerChapterDescription, VLCProgramDescription;
 #if !TARGET_OS_IPHONE
 @class VLCVideoView, VLCVideoLayer;
 #endif // !TARGET_OS_IPHONE
@@ -49,19 +49,22 @@ FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerTitleSelectionChangedNo
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerTitleListChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.titleListChangedNotification);
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerChapterChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.chapterChangedNotification);
 FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerSnapshotTakenNotification NS_SWIFT_NAME(VLCMediaPlayer.snapshotTakenNotification);
+FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerProgramListChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.programListChangedNotification);
+FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerProgramSelectionChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.programSelectionChangedNotification);
+FOUNDATION_EXPORT NSNotificationName const VLCMediaPlayerCapabilitiesChangedNotification NS_SWIFT_NAME(VLCMediaPlayer.capabilitiesChangedNotification); ///< Notification message for when the player's capabilities (such as seekable or canPause) have changed
 
 /**
  * VLCMediaPlayerState describes the state of the media player.
  */
 typedef NS_ENUM(NSInteger, VLCMediaPlayerState)
 {
-    VLCMediaPlayerStateStopped,        ///< Player has stopped
-    VLCMediaPlayerStateStopping,       ///< Player is stopping
+    VLCMediaPlayerStateNothingSpecial,
     VLCMediaPlayerStateOpening,        ///< Stream is opening
-    VLCMediaPlayerStateBuffering,      ///< Stream is buffering
-    VLCMediaPlayerStateError,          ///< Player has generated an error
     VLCMediaPlayerStatePlaying,        ///< Stream is playing
     VLCMediaPlayerStatePaused,         ///< Stream is paused
+    VLCMediaPlayerStateStopped,        ///< Player has stopped
+    VLCMediaPlayerStateStopping,       ///< Player is stopping
+    VLCMediaPlayerStateError,          ///< Player has generated an error
 };
 
 /**
@@ -87,6 +90,20 @@ typedef NS_ENUM(NSInteger, VLCDeinterlace)
 };
 
 /**
+ * VLCMediaPlayerFrameStepResult describes the outcome of a frame step requested
+ * through -gotoNextFrame or -gotoPreviousFrame.
+ */
+typedef NS_ENUM(NSInteger, VLCMediaPlayerFrameStepResult)
+{
+    VLCMediaPlayerFrameStepResultSuccess = 0,       ///< The frame was stepped successfully
+    VLCMediaPlayerFrameStepResultPending,           ///< First step request, the player is being paused
+    VLCMediaPlayerFrameStepResultVideoError,        ///< The video output reported an error
+    VLCMediaPlayerFrameStepResultCannotPause,       ///< The stream cannot be paused
+    VLCMediaPlayerFrameStepResultInvalidState,      ///< The player is in an invalid state to step
+    VLCMediaPlayerFrameStepResultCannotSeekBack,    ///< The player could not seek back (previous frame only)
+};
+
+/**
  * Returns the name of the player state as a string.
  * \param state The player state.
  * \return A string containing the name of state. If state is not a valid state, returns nil.
@@ -106,6 +123,14 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
  * \param newState the current new state
  */
 - (void)mediaPlayerStateChanged:(VLCMediaPlayerState)newState;
+
+/**
+ * Called when the media player signal that its buffering progress changed.
+ * \param progress the buffering progress in the range [0.0, 1.0], where 1.0
+ * means buffering is complete and playback can proceed
+ * \note this is always called with 0.0 and 1.0 before a successful playback
+ */
+- (void)mediaPlayerBufferingChanged:(float)progress;
 
 /**
  * Called when the media player signal that a new track is available
@@ -177,6 +202,20 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
 - (void)mediaPlayerChapterChanged:(NSNotification *)aNotification;
 
 /**
+ * Sent by the default notification center whenever the player's list of programs has changed.
+ * \details Discussion The value of aNotification is always an VLCMediaPlayerProgramListChanged notification. You can retrieve
+ * the VLCMediaPlayer object in question by sending object to aNotification. Request programs to get the actual list.
+ */
+- (void)mediaPlayerProgramListChanged:(NSNotification *)aNotification;
+
+/**
+ * Sent by the default notification center whenever the player's selected program has changed.
+ * \details Discussion The value of aNotification is always an VLCMediaPlayerProgramSelectionChanged notification. You can retrieve
+ * the VLCMediaPlayer object in question by sending object to aNotification.
+ */
+- (void)mediaPlayerProgramSelectionChanged:(NSNotification *)aNotification;
+
+/**
  * Sent by the default notification center whenever a new snapshot is taken.
  * \details Discussion The value of aNotification is always an VLCMediaPlayerSnapshotTaken notification. You can retrieve
  * the VLCMediaPlayer object in question by sending object to aNotification.
@@ -205,6 +244,20 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
  * @param text the decoded caption text, or an empty string when cleared
  */
 - (void)mediaPlayer:(VLCMediaPlayer *)player didUpdateAribText:(NSString *)text;
+
+/**
+ * Sent when the frame requested through -gotoNextFrame is about to be displayed.
+ * @param player the player performing the frame step
+ * @param result the outcome of the frame step
+ */
+- (void)mediaPlayer:(VLCMediaPlayer *)player nextFrameSteppedWithResult:(VLCMediaPlayerFrameStepResult)result;
+
+/**
+ * Sent when the frame requested through -gotoPreviousFrame is about to be displayed.
+ * @param player the player performing the frame step
+ * @param result the outcome of the frame step
+ */
+- (void)mediaPlayer:(VLCMediaPlayer *)player previousFrameSteppedWithResult:(VLCMediaPlayerFrameStepResult)result;
 
 @end
 
@@ -349,6 +402,22 @@ OBJC_VISIBLE
  * \param name of deinterlace filter to use (availability depends on underlying VLC version).
  */
 - (void)setDeinterlace:(VLCDeinterlace)deinterlace withFilter:(NSString *)name;
+
+/**
+ * Enumeration of values used to fit the video inside the display area.
+ */
+typedef NS_ENUM(NSInteger, VLCVideoFitMode) {
+    VLCVideoFitNone = 0,    ///< explicit zoom set by scaleFactor
+    VLCVideoFitSmaller,     ///< fit to the smallest display dimension
+    VLCVideoFitLarger,      ///< fit to the largest display dimension
+    VLCVideoFitWidth,       ///< fit to the display width
+    VLCVideoFitHeight       ///< fit to the display height
+} NS_SWIFT_NAME(VLCMediaPlayer.VideoFitMode);
+
+/**
+ * how the video is fitted inside the display area
+ */
+@property (nonatomic) VLCVideoFitMode videoFitMode;
 
 /**
  * Access to adjust filter's parameters and properties
@@ -564,6 +633,68 @@ typedef NS_ENUM(unsigned, VLCMediaPlaybackSlaveType)
 @property (readonly) int indexOfLongestTitle;
 
 #pragma mark -
+#pragma mark program selection
+
+/**
+ * the programs of the current media as a snapshot
+ * \return an array describing the available programs
+ */
+@property (nonatomic, readonly, copy, nullable) NSArray<VLCProgramDescription *> *programs;
+
+/**
+ * the currently selected program
+ * \return the selected program, or nil if none is selected
+ */
+@property (nonatomic, readonly, nullable) VLCProgramDescription *selectedProgram;
+
+/**
+ * select a program by its group identifier
+ * \param groupID the program's group identifier
+ */
+- (void)selectProgramWithIdentifier:(int)groupID;
+
+/**
+ * whether the currently selected program is scrambled
+ * \return YES if the selected program is scrambled
+ */
+@property (nonatomic, readonly, getter=isProgramScrambled) BOOL programScrambled;
+
+#pragma mark -
+#pragma mark A-B loop
+
+typedef NS_ENUM(NSUInteger, VLCMediaPlayerABLoopState) {
+    VLCMediaPlayerABLoopStateNone = 0,
+    VLCMediaPlayerABLoopStateA,
+    VLCMediaPlayerABLoopStateB
+} NS_SWIFT_NAME(VLCMediaPlayer.ABLoopState);
+
+/**
+ * enable an A-B loop between two times of the current media
+ * \param from the loop start time
+ * \param to the loop end time, must be later than from
+ * \return YES on success
+ */
+- (BOOL)setABLoopFromTime:(VLCTime *)from toTime:(VLCTime *)to;
+
+/**
+ * enable an A-B loop between two positions of the current media
+ * \param from the loop start position in the range [0., 1.]
+ * \param to the loop end position, must be higher than from
+ * \return YES on success
+ */
+- (BOOL)setABLoopFromPosition:(double)from toPosition:(double)to;
+
+/**
+ * reset/remove the A-B loop of the current media
+ * \return YES on success
+ */
+- (BOOL)resetABLoop;
+
+@property (nonatomic, readonly) VLCMediaPlayerABLoopState abLoopState;
+@property (nonatomic, readonly, nullable) VLCTime *abLoopStartTime;
+@property (nonatomic, readonly, nullable) VLCTime *abLoopEndTime;
+
+#pragma mark -
 #pragma mark audio functionality
 
 /**
@@ -645,8 +776,17 @@ typedef NS_ENUM(unsigned, VLCAudioMixMode)
 
 /**
  * Advance one frame.
+ * \note The player must be playing or paused. If playing, it will be paused first.
+ * \note Listen to -mediaPlayer:nextFrameSteppedWithResult: to be notified when the frame is displayed.
  */
 - (void)gotoNextFrame;
+
+/**
+ * Step back one frame.
+ * \note Works only on streams that support pause, seek and pace control. If playing, the player will be paused first.
+ * \note Listen to -mediaPlayer:previousFrameSteppedWithResult: to be notified when the frame is displayed.
+ */
+- (void)gotoPreviousFrame;
 
 /**
  * Fast forwards through the feed at the standard 1x rate.

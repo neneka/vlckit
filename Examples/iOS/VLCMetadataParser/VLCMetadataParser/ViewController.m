@@ -27,12 +27,12 @@
 #import <VLCKit/VLCKit.h>
 #import <CommonCrypto/CommonDigest.h> // for MD5
 
-@interface ViewController () <VLCMediaPlayerDelegate, VLCMediaDelegate>
+@interface ViewController () <VLCMediaParserDelegate>
 {
     UITextView *_textView;
     UIActivityIndicatorView *_activityIndicatorView;
-    NSTimer *_timeOutTimer;
     VLCMedia *_media;
+    VLCMediaParser *_parser;
 }
 @end
 
@@ -57,80 +57,72 @@
 
 - (void)viewDidAppear:(BOOL)animated
 {
+    [super viewDidAppear:animated];
+
     [_activityIndicatorView startAnimating];
     VLCLibrary *sharedLibrary = [VLCLibrary sharedLibrary];
     VLCConsoleLogger *consoleLogger = [[VLCConsoleLogger alloc] init];
     consoleLogger.level = kVLCLogLevelDebug;
     [sharedLibrary setLoggers:@[consoleLogger]];
     _media = [VLCMedia mediaWithURL:[NSURL URLWithString:@"http://streams.videolan.org/streams/mp4/Mr_MrsSmith-h264_aac.mp4"]];
-    _media.delegate = self;
 
-    _timeOutTimer = [NSTimer scheduledTimerWithTimeInterval:3. target:self selector:@selector(parsingTimeout:) userInfo:nil repeats:NO];
+    _parser = [VLCMediaParser sharedParser];
+    _parser.delegate = self;
 
-    [_media parseWithOptions:VLCMediaParseLocal|VLCMediaFetchLocal|VLCMediaParseNetwork|VLCMediaFetchNetwork];
-
-    [super viewDidAppear:animated];
+    [_parser queueMedia:_media options:VLCMediaParseLocal|VLCMediaFetchLocal|VLCMediaParseNetwork|VLCMediaFetchNetwork];
 }
 
-- (void)parsingTimeout:(NSTimer *)timer
+- (void)mediaFinishedParsing:(VLCMedia *)media withStatus:(VLCMediaParsedStatus)status
 {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSMutableString *parsingOutput = [[NSMutableString alloc] initWithFormat:@"\n\nParsing of the following media reached its timeout: %@\n", _media];
-    _textView.text = parsingOutput;
-}
+    NSMutableString *parsingOutput = [[NSMutableString alloc] initWithFormat:@"\n\nParsed: %@ (Status: %i)\nNumber of tracks: %lu\n",
+                                      _media, status, (unsigned long)[[_media tracksInformation] count]];
 
-- (void)mediaDidFinishParsing:(VLCMedia *)media
-{
-    [_timeOutTimer invalidate];
+    _media.delegate = nil;
+
+    VLCMediaMetaData *metaData = _media.metaData;
+    [metaData prefetch];
+
+    NSArray *tracks = _media.tracksInformation;
+    for (VLCMediaTrack *track in tracks) {
+        [parsingOutput appendString:@"\n"];
+        VLCMediaTrackType type = track.type;
+        if (type == VLCMediaTrackTypeVideo) {
+            [parsingOutput appendFormat:@"Video Track:\nDimensions: %ux%u\n",
+             track.video.width,
+             track.video.height];
+        } else if (type == VLCMediaTrackTypeAudio) {
+            [parsingOutput appendFormat:@"Audio Track:\nSample rate: %u\nNumber of Channels: %u\n",
+             track.audio.rate,
+             track.audio.channelsNumber];
+        } else if (type == VLCMediaTrackTypeText) {
+            [parsingOutput appendFormat:@"SPU track:\nText Encoding: %@\n", track.text.encoding];
+        }
+
+        int fourcc = track.fourcc;
+        [parsingOutput appendFormat:@"Bitrate: %i\nCodec: %@\nFourCC: %4.4s\nCodec Level: %i\nCodec Profile: %i\nLanguage: %@\n",
+         track.bitrate,
+         [VLCMedia codecNameForFourCC:track.fourcc trackType:track.type],
+         (char *)&fourcc,
+         track.level,
+         track.profile,
+         track.language];
+    }
+    [parsingOutput appendFormat:@"\nDuration: %@\n", [[_media length] stringValue]];
+
+    [parsingOutput appendFormat:@"\nContent Info:\nTitle: %@\nArtist: %@\nAlbum Artist: %@\nAlbum name: %@\nGenre: %@\nTrack number: %u\nDisc number: %u\nArtwork URL: %@",
+     metaData.title, metaData.artist, metaData.albumArtist, metaData.album, metaData.genre, metaData.trackNumber, metaData.discNumber, metaData.artworkURL];
+
+    NSString *artworkPath = [self artworkPathForMediaItemWithTitle:metaData.title
+                                                            Artist:metaData.artist
+                                                      andAlbumName:metaData.album];
+    if (artworkPath) {
+        [parsingOutput appendFormat:@"\nArtwork path: %@", artworkPath];
+    }
+
+    NSLog(@"%@", parsingOutput);
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSMutableString *parsingOutput = [[NSMutableString alloc] initWithFormat:@"\n\nParsed: %@\nNumber of tracks: %lu\n", _media, (unsigned long)[[_media tracksInformation] count]];
-
-        self->_media.delegate = nil;
-
-        VLCMediaMetaData *metaData = self->_media.metaData;
-        [metaData prefetch];
-
-        NSArray *tracks = self->_media.tracksInformation;
-        for (VLCMediaTrack *trackInfo in tracks) {
-            [parsingOutput appendString:@"\n"];
-            VLCMediaTrackType type = trackInfo.type;
-            if (type == VLCMediaTrackTypeVideo) {
-                [parsingOutput appendFormat:@"Video Track:\nDimensions: %ux%u\n",
-                 trackInfo.video.width,
-                 trackInfo.video.height];
-            } else if (type == VLCMediaTrackTypeAudio) {
-                [parsingOutput appendFormat:@"Audio Track:\nSample rate: %u\nNumber of Channels: %u\n",
-                 trackInfo.audio.rate,
-                 trackInfo.audio.channelsNumber];
-            } else if (type == VLCMediaTrackTypeText) {
-                [parsingOutput appendFormat:@"SPU track:\nText Encoding: %@\n", trackInfo.text.encoding];
-            }
-
-            int fourcc = trackInfo.fourcc;
-            [parsingOutput appendFormat:@"Bitrate: %i\nCodec: %@\nFourCC: %4.4s\nCodec Level: %i\nCodec Profile: %i\nLanguage: %@\n",
-             trackInfo.bitrate,
-             [VLCMedia codecNameForFourCC:trackInfo.fourcc trackType:trackInfo.type],
-             (char *)&fourcc,
-             trackInfo.level,
-             trackInfo.profile,
-             trackInfo.language];
-        }
-        [parsingOutput appendFormat:@"\nDuration: %@\n", [[self->_media length] stringValue]];
-
-        [parsingOutput appendFormat:@"\nContent Info:\nTitle: %@\nArtist: %@\nAlbum Artist: %@\nAlbum name: %@\nGenre: %@\nTrack number: %u\nDisc number: %u\nArtwork URL: %@",
-         metaData.title, metaData.artist, metaData.albumArtist, metaData.album, metaData.genre, metaData.trackNumber, metaData.discNumber, metaData.artworkURL];
-
-        NSString *artworkPath = [self artworkPathForMediaItemWithTitle:metaData.title
-                                                                Artist:metaData.artist
-                                                          andAlbumName:metaData.album];
-        if (artworkPath) {
-            [parsingOutput appendFormat:@"\nArtwork path: %@", artworkPath];
-        }
-
-        NSLog(@"%@", parsingOutput);
-
-        [_activityIndicatorView stopAnimating];
+        [self->_activityIndicatorView stopAnimating];
         self->_textView.text = parsingOutput;
     });
 }
