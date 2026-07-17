@@ -115,7 +115,8 @@ typedef NS_ENUM(NSInteger, VLCMediaTrackType) {
     VLCMediaTrackTypeUnknown    = -1,
     VLCMediaTrackTypeAudio      = 0,
     VLCMediaTrackTypeVideo      = 1,
-    VLCMediaTrackTypeText       = 2
+    VLCMediaTrackTypeText       = 2,
+    VLCMediaTrackTypeData       = 3
 } NS_SWIFT_NAME(VLCMedia.TrackType);
 
 /**
@@ -457,6 +458,11 @@ typedef struct VLCMediaStats VLCMediaStats;
  * textTracks
  */
 @property(nonatomic, readonly, copy) NSArray<VLCMediaTrack *> *textTracks;
+
+/**
+ * dataTracks
+ */
+@property(nonatomic, readonly, copy) NSArray<VLCMediaTrack *> *dataTracks;
 
 @end
 

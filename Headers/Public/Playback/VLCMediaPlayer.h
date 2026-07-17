@@ -246,6 +246,13 @@ NSString * VLCMediaPlayerStateToString(VLCMediaPlayerState state);
 - (void)mediaPlayer:(VLCMediaPlayer *)player didUpdateAribText:(NSString *)text;
 
 /**
+ * Sent when ARIB BML data is received during playback.
+ * @param player the player representing the playback
+ * @param data the raw TS section data
+ */
+- (void)mediaPlayer:(VLCMediaPlayer *)player didReceiveBMLData:(NSData *)data;
+
+/**
  * Sent when the frame requested through -gotoNextFrame is about to be displayed.
  * @param player the player performing the frame step
  * @param result the outcome of the frame step
@@ -283,6 +290,12 @@ OBJC_VISIBLE
  * An empty string signals that the current subtitle has been cleared.
  */
 @property (nonatomic, copy, nullable) void (^aribTextUpdatedBlock)(NSString *text);
+
+/**
+ * A block called when ARIB BML data is received during playback.
+ * The data parameter contains the raw TS section data.
+ */
+@property (nonatomic, copy, nullable) void (^bmlDataReceivedBlock)(NSData *data);
 
 #if !TARGET_OS_IPHONE
 /* Initializers */
@@ -1041,6 +1054,11 @@ typedef NS_ENUM(unsigned, VLCAudioMixMode)
 @property(nonatomic, readonly, copy) NSArray<VLCMediaPlayerTrack *> *textTracks;
 
 /**
+ * dataTracks
+ */
+@property(nonatomic, readonly, copy) NSArray<VLCMediaPlayerTrack *> *dataTracks;
+
+/**
  * Select a track of a given type at the given index
  * \param index position of the track in the list
  * \param type type of the track being selected
@@ -1067,6 +1085,11 @@ typedef NS_ENUM(unsigned, VLCAudioMixMode)
  * deselect all text tracks
  */
 - (void)deselectAllTextTracks;
+
+/**
+ * deselect all data tracks
+ */
+- (void)deselectAllDataTracks;
 
 @end
 
