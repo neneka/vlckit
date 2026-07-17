@@ -278,6 +278,8 @@ static VLCMediaTrackType GetMediaTrackType(libvlc_track_type_t trackType)
             return VLCMediaTrackTypeText;
         case libvlc_track_video:
             return VLCMediaTrackTypeVideo;
+        case libvlc_track_data:
+            return VLCMediaTrackTypeData;
         default:
             return VLCMediaTrackTypeUnknown;
     }
@@ -590,6 +592,22 @@ static void HandleMediaPlayerAribText(const char *text, void *opaque)
     }
 }
 
+static void HandleMediaPlayerBMLData(const uint8_t *data, size_t size, void *opaque)
+{
+    @autoreleasepool {
+        NSData *nsData = [NSData dataWithBytes:data length:size];
+        VLCMediaPlayer *player = (__bridge VLCMediaPlayer *)opaque;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (player.bmlDataReceivedBlock) {
+                player.bmlDataReceivedBlock(nsData);
+            }
+            if ([player.delegate respondsToSelector:@selector(mediaPlayer:didReceiveBMLData:)]) {
+                [player.delegate mediaPlayer:player didReceiveBMLData:nsData];
+            }
+        });
+    }
+}
+
 static VLCMediaPlayerFrameStepResult GetFrameStepResult(int status)
 {
     switch (-status) {
@@ -717,6 +735,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
                                        &watch_time_cbs, (__bridge void *)_eventsHandler);
 
         libvlc_video_set_arib_text_callbacks(_playerInstance, HandleMediaPlayerAribText, (__bridge void *)self);
+        libvlc_video_set_bml_callbacks(_playerInstance, HandleMediaPlayerBMLData, (__bridge void *)self);
     }
     return self;
 
@@ -743,6 +762,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
                                        &watch_time_cbs, (__bridge void *)_eventsHandler);
 
         libvlc_video_set_arib_text_callbacks(_playerInstance, HandleMediaPlayerAribText, (__bridge void *)self);
+        libvlc_video_set_bml_callbacks(_playerInstance, HandleMediaPlayerBMLData, (__bridge void *)self);
     }
     return self;
 }
@@ -797,6 +817,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
         libvlc_free(_viewpoint);
 
     libvlc_video_set_arib_text_callbacks(_playerInstance, NULL, NULL);
+    libvlc_video_set_bml_callbacks(_playerInstance, NULL, NULL);
 
     libvlc_media_player_release(_playerInstance);
 }
@@ -1875,6 +1896,7 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
                                        &watch_time_cbs, (__bridge void *)_eventsHandler);
 
         libvlc_video_set_arib_text_callbacks(_playerInstance, HandleMediaPlayerAribText, (__bridge void *)self);
+        libvlc_video_set_bml_callbacks(_playerInstance, HandleMediaPlayerBMLData, (__bridge void *)self);
 
         [self setDrawable:aDrawable];
     }
@@ -2009,6 +2031,13 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
     return [self _tracksForType: libvlc_track_text];
 }
 
+#pragma mark - Data Tracks
+
+- (NSArray<VLCMediaPlayerTrack *> *)dataTracks
+{
+    return [self _tracksForType: libvlc_track_data];
+}
+
 #pragma mark - Track Selection
 
 - (void)selectTrackAtIndex:(NSInteger)index type:(VLCMediaTrackType)type
@@ -2066,6 +2095,11 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
 - (void)deselectAllTextTracks
 {
     libvlc_media_player_unselect_track_type(_playerInstance, libvlc_track_text);
+}
+
+- (void)deselectAllDataTracks
+{
+    libvlc_media_player_unselect_track_type(_playerInstance, libvlc_track_data);
 }
 
 #pragma mark - Private
