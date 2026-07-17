@@ -1694,6 +1694,11 @@ static void HandleMediaPlayerPreviousFrameStatus(void *opaque, int status)
     libvlc_media_player_set_position(_playerInstance, newPosition, NO);
 }
 
+- (double)bytePosition
+{
+    return libvlc_media_player_get_byte_position(_playerInstance);
+}
+
 - (BOOL)isSeeking
 {
     __block BOOL isSeeking = NO;

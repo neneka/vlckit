@@ -944,6 +944,17 @@ typedef NS_ENUM(unsigned, VLCAudioMixMode)
 @property (NS_NONATOMIC_IOSONLY) double position;
 
 /**
+ * Returns the receiver's byte-offset position.
+ *
+ * Unlike \c position, this returns the raw stream byte offset as a
+ * fraction of the total stream size, without timer interpolation.
+ * Suitable for saving and restoring exact playback positions.
+ *
+ * \return byte position as percentage between 0.0 and 1.0.
+ */
+@property (NS_NONATOMIC_IOSONLY, readonly) double bytePosition;
+
+/**
  * property whether the current input is seekable or not, e.g. it's a live stream
  * \note Setting position or time for non-seekable inputs does not have any effect and will fail silently
  * \return BOOL value
