@@ -806,6 +806,63 @@ void close_cb(void *opaque) {
 /******************************************************************************
  * Implementation VLCMediaPlayerTrack
  */
+/* Keep SAR in player tracks in sync with libVLC updates. */
+@interface VLCMediaPlayerVideoTrack : VLCMediaVideoTrack
+- (nullable instancetype)initWithMediaTrack:(libvlc_media_track_t *)track
+                                mediaPlayer:(VLCMediaPlayer *)mediaPlayer;
+@end
+
+@implementation VLCMediaPlayerVideoTrack
+{
+    __weak VLCMediaPlayer *_mediaPlayer;
+    NSString *_trackId;
+}
+
+- (nullable instancetype)initWithMediaTrack:(libvlc_media_track_t *)track
+                                mediaPlayer:(VLCMediaPlayer *)mediaPlayer
+{
+    if (!track || track->i_type != libvlc_track_video || !track->u.video)
+        return nil;
+
+    if ([super initWithVideoTrack:track->u.video] == nil)
+        return nil;
+
+    _mediaPlayer = mediaPlayer;
+    _trackId = track->psz_id ? @(track->psz_id) : nil;
+    return self;
+}
+
+- (unsigned)currentSourceAspectRatioValueForDenominator:(BOOL)denominator
+{
+    libvlc_media_player_t *p_mi = (libvlc_media_player_t *)_mediaPlayer.libVLCMediaPlayer;
+    if (!p_mi || _trackId.length == 0)
+        return denominator ? [super sourceAspectRatioDenominator] : [super sourceAspectRatio];
+
+    libvlc_media_track_t *track = libvlc_media_player_get_track_from_id(p_mi,
+                                                                         _trackId.UTF8String);
+    if (!track || track->i_type != libvlc_track_video || !track->u.video) {
+        if (track)
+            libvlc_media_track_release(track);
+        return denominator ? [super sourceAspectRatioDenominator] : [super sourceAspectRatio];
+    }
+
+    const unsigned value = denominator ? track->u.video->i_sar_den : track->u.video->i_sar_num;
+    libvlc_media_track_release(track);
+    return value;
+}
+
+- (unsigned)sourceAspectRatio
+{
+    return [self currentSourceAspectRatioValueForDenominator:NO];
+}
+
+- (unsigned)sourceAspectRatioDenominator
+{
+    return [self currentSourceAspectRatioValueForDenominator:YES];
+}
+
+@end
+
 @implementation VLCMediaPlayerTrack
 {
     __weak VLCMediaPlayer *_mediaPlayer;
@@ -820,6 +877,29 @@ void close_cb(void *opaque) {
     _idStable = track->id_stable;
     _trackName = track->psz_name ? @(track->psz_name) : @"";
     return self;
+}
+
+- (nullable VLCMediaVideoTrack *)video
+{
+    if (self.type != VLCMediaTrackTypeVideo)
+        return [super video];
+
+    libvlc_media_player_t *p_mi = (libvlc_media_player_t *)_mediaPlayer.libVLCMediaPlayer;
+    if (!p_mi || self.trackId.length == 0)
+        return [super video];
+
+    libvlc_media_track_t *track = libvlc_media_player_get_track_from_id(p_mi,
+                                                                         self.trackId.UTF8String);
+    if (!track || track->i_type != libvlc_track_video || !track->u.video) {
+        if (track)
+            libvlc_media_track_release(track);
+        return [super video];
+    }
+
+    VLCMediaVideoTrack *video = [[VLCMediaPlayerVideoTrack alloc] initWithMediaTrack:track
+                                                                            mediaPlayer:_mediaPlayer];
+    libvlc_media_track_release(track);
+    return video ?: [super video];
 }
 
 - (BOOL)isSelected
