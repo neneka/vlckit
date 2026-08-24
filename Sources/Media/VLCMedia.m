@@ -470,8 +470,8 @@ void close_cb(void *opaque) {
 {
     NSMutableArray<VLCMediaTrack *> *array = @[].mutableCopy;
     
-    // 3 = (libvlc_track_audio = 0 | libvlc_track_video = 1 | libvlc_track_text = 2)
-    for (libvlc_track_type_t type = 0; type < 3; type++) {
+    // 4 = (libvlc_track_audio = 0 | libvlc_track_video = 1 | libvlc_track_text = 2 | libvlc_track_data = 3)
+    for (libvlc_track_type_t type = 0; type < 4; type++) {
         libvlc_media_tracklist_t *tracklist = libvlc_media_get_tracklist(p_md, type);
         if (!tracklist) continue;
         
@@ -659,6 +659,13 @@ void close_cb(void *opaque) {
 - (NSArray<VLCMediaTrack *> *)textTracks
 {
     return [self _tracksForType: libvlc_track_text];
+}
+
+#pragma mark - Data Tracks
+
+- (NSArray<VLCMediaTrack *> *)dataTracks
+{
+    return [self _tracksForType: libvlc_track_data];
 }
 
 #pragma mark - Private
