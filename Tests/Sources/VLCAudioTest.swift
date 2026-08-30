@@ -103,4 +103,15 @@ class VLCAudioTest: XCTestCase {
             XCTAssertEqual(audio.volume, expected)
         }
     }
+
+    func testAudioCanOutliveMediaPlayer() throws {
+        var player: VLCMediaPlayer? = VLCMediaPlayer()
+        weak var weakPlayer = player
+        let audio = try XCTAssertNotNilAndUnwrap(player?.audio)
+
+        player = nil
+
+        XCTAssertNil(weakPlayer)
+        XCTAssertGreaterThanOrEqual(audio.volume, min)
+    }
 }
