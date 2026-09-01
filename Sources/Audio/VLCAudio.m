@@ -32,6 +32,7 @@
 @interface VLCAudio ()
 {
     void *_instance;
+    VLCEventsHandler *_eventsHandler;
 }
 @end
 
@@ -62,6 +63,10 @@ NSNotificationName const VLCMediaPlayerVolumeChangedNotification = @"VLCMediaPla
     if (!self)
         return nil;
     _instance = [mediaPlayer libVLCMediaPlayer];
+    // The media player callbacks use this object as an unretained opaque
+    // pointer. Keep it alive for as long as VLCAudio keeps the underlying
+    // libvlc media player alive.
+    _eventsHandler = mediaPlayer.eventsHandler;
     libvlc_media_player_retain([self instance]);
     return self;
 }

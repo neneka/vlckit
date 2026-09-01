@@ -40,6 +40,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class VLCEventsHandler;
+
 /**
  * Bridges functionality between libvlc and VLCMediaList implementation.
  */
@@ -102,6 +104,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /* Properties */
 @property (readonly) void * libVLCMediaPlayer;    ///< LibVLC media list pointer.
+@property (nonatomic, readonly) VLCEventsHandler *eventsHandler;
 @end
 
 /**
