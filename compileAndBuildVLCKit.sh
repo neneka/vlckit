@@ -611,7 +611,12 @@ if [ "$SKIPLIBVLCCOMPILATION" != "yes" ]; then
 
     spushd ${VLCROOT}/extras/tools
     ./bootstrap
-    make
+    # ftpmirror.gnu.org can lag behind newly released GNU tarballs (for
+    # example m4-1.4.21). Use the canonical GNU mirror by default while
+    # keeping an override for environments with a preferred mirror.
+    GNU_MIRROR="${VLC_GNU_MIRROR:-https://ftp.gnu.org/gnu}"
+    info "Using GNU package mirror: ${GNU_MIRROR}"
+    make GNU="${GNU_MIRROR}"
     spopd #${VLCROOT}/extras/tools
 fi
 
