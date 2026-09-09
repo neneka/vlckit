@@ -31,7 +31,7 @@ if [ -z "$MAKEFLAGS" ]; then
 fi
 
 BRANCH="master20260717"
-TESTEDHASH="ba4a3b20b1db034e46958238ec119a2cd1f90e7e" # libvlc hash that this version of VLCKit is build on
+TESTEDHASH="042cec3844373be1dbf8f46a1801499c1eb92497" # libvlc hash that this version of VLCKit is build on
 
 usage()
 {
@@ -611,7 +611,12 @@ if [ "$SKIPLIBVLCCOMPILATION" != "yes" ]; then
 
     spushd ${VLCROOT}/extras/tools
     ./bootstrap
-    make
+    # ftpmirror.gnu.org can lag behind newly released GNU tarballs (for
+    # example m4-1.4.21). Use the canonical GNU mirror by default while
+    # keeping an override for environments with a preferred mirror.
+    GNU_MIRROR="${VLC_GNU_MIRROR:-https://ftp.gnu.org/gnu}"
+    info "Using GNU package mirror: ${GNU_MIRROR}"
+    make GNU="${GNU_MIRROR}"
     spopd #${VLCROOT}/extras/tools
 fi
 
