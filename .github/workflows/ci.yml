@@ -19,6 +19,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+      - name: Free disk space before build
+        run: |
+          set -euo pipefail
+
+          echo "Disk space before cleanup"
+          df -h
+
+          # macos-15-arm64 images contain several Xcode installations. Keep
+          # only the version selected by xcode-select for this build.
+          active_xcode="$(xcode-select -p | sed 's#/Contents/Developer$##')"
+          if [ -d "$active_xcode" ]; then
+            active_xcode="$(cd "$active_xcode" && pwd -P)"
+          fi
+          case "$active_xcode" in
+            /Applications/Xcode_*.app)
+              for xcode in /Applications/Xcode_*.app; do
+                if [ -d "$xcode" ] && [ "$xcode" != "$active_xcode" ]; then
+                  sudo rm -rf "$xcode"
+                fi
+              done
+              ;;
+            *)
+              echo "Could not identify an active versioned Xcode; keeping installed Xcodes"
+              ;;
+          esac
+
+          rm -rf "$HOME/Library/Developer/Xcode/DerivedData"
+          rm -rf "$HOME/Library/Developer/CoreSimulator/Caches"
+          rm -rf "$HOME/Library/Caches/Homebrew"
+          brew cleanup --prune=all || true
+          xcrun simctl delete unavailable || true
+
+          echo "Disk space after cleanup"
+          df -h
+        shell: bash
       - name: Build (Partial)
         if: ${{ github.event_name == 'pull_request' }}
         run: ./Packaging/create-distributable-package.sh -x -d -v
@@ -28,6 +63,10 @@ jobs:
           (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
           github.event.inputs.release == 'true'
         run: ./Packaging/create-distributable-package.sh -x -m -d -v
+        shell: bash
+      - name: Show disk space after build
+        if: ${{ always() }}
+        run: df -h
         shell: bash
       - name: Upload
         uses: actions/upload-artifact@v7
