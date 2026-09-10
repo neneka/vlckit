@@ -61,6 +61,33 @@ append_license_debug_sources()
     done < "$manifest"
 }
 
+cleanup_build_intermediates()
+{
+    info "Cleaning build intermediates before disk-image creation"
+
+    # The packaged xcframeworks and license archives have already been
+    # collected at this point. Remove only build outputs that are no longer
+    # needed so hdiutil has room for its read/write image and compressed copy.
+    if [ -d "build/DerivedData" ]; then
+        rm -rf "build/DerivedData"
+    fi
+    for archive in build/VLCKit-*.xcarchive; do
+        if [ -d "$archive" ]; then
+            rm -rf "$archive"
+        fi
+    done
+    for framework in build/VLCKit.xcframework build/macOS build/iOS build/tvOS build/xrOS build/watchOS; do
+        if [ -d "$framework" ]; then
+            rm -rf "$framework"
+        fi
+    done
+    for intermediate in libvlc/vlc/build-* libvlc/vlc/install-*; do
+        if [ -d "$intermediate" ]; then
+            rm -rf "$intermediate"
+        fi
+    done
+}
+
 IOS=no
 TVOS=no
 MACOS=no
@@ -321,9 +348,16 @@ mv COPYING COPYING.txt
 spopd
 
 if [ "$USEDMG" = "yes" ]; then
+    info "Disk space before build cleanup"
+    df -h
+    cleanup_build_intermediates
+    info "Disk space after build cleanup"
+    df -h
+    info "Disk image source size"
+    du -sh "${DMGFOLDERNAME}"
     info "Creating disk-image"
     rm -f ${DMGITEMNAME}-rw.dmg
-    hdiutil create -srcfolder "${DMGFOLDERNAME}" "${DMGITEMNAME}-rw.dmg" -scrub -format UDRW
+    hdiutil create -srcfolder "${DMGFOLDERNAME}" "${DMGITEMNAME}-rw.dmg" -noscrub -format UDRW
     mkdir -p ./mount
 
     info "Moving file icons around"

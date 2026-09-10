@@ -244,6 +244,7 @@ buildxcodeproj()
                -scheme "VLCKit" \
                -destination "generic/platform=${PLATFORMNAME}" \
                -archivePath build/VLCKit-$PLATFORM$SDK.xcarchive \
+               -derivedDataPath build/DerivedData/$PLATFORM \
                ARCHS="${architectures}" \
                ${deploymentTargetFlag} \
                ${bitcodeflag} \
